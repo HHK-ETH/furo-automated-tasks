@@ -3,8 +3,10 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IFuroAutomatedTimeWithdraw.sol";
 import "./interfaces/KeeperCompatibleInterface.sol";
+import "./interfaces/IBentoBoxMinimal.sol";
 import "./interfaces/IFuroStream.sol";
 import "./interfaces/IFuroVesting.sol";
+import "./interfaces/ITasker.sol";
 
 contract FuroAutomatedTimeWithdraw is
     IFuroAutomatedTimeWithdraw,
@@ -15,6 +17,7 @@ contract FuroAutomatedTimeWithdraw is
     /// -----------------------------------------------------------------------
 
     error NotOwner();
+    error ToEarlyToWithdraw();
 
     /// -----------------------------------------------------------------------
     /// Events
@@ -26,6 +29,7 @@ contract FuroAutomatedTimeWithdraw is
     /// Immutable variables
     /// -----------------------------------------------------------------------
 
+    IBentoBoxMinimal public immutable bentoBox;
     IFuroStream internal immutable furoStream;
     IFuroVesting internal immutable furoVesting;
 
@@ -41,7 +45,12 @@ contract FuroAutomatedTimeWithdraw is
     /// Constructor
     /// -----------------------------------------------------------------------
 
-    constructor(address _furoStream, address _furoVesting) {
+    constructor(
+        address _bentoBox,
+        address _furoStream,
+        address _furoVesting
+    ) {
+        bentoBox = IBentoBoxMinimal(_bentoBox);
         furoStream = IFuroStream(_furoStream);
         furoVesting = IFuroVesting(_furoVesting);
     }
@@ -158,16 +167,13 @@ contract FuroAutomatedTimeWithdraw is
                     automatedTimeWithdraw.streamWithdrawPeriod <
                 block.timestamp
             ) {
-                if (automatedTimeWithdraw.vesting) {
-                    return (true, abi.encode(automatedTimeWithdraw));
+                uint256 amountToWithdraw;
+                if (!automatedTimeWithdraw.vesting) {
+                    (, amountToWithdraw) = furoStream.streamBalanceOf(
+                        automatedTimeWithdraw.streamId
+                    );
                 }
-                (, uint256 amountToWithdraw) = furoStream.streamBalanceOf(
-                    automatedTimeWithdraw.streamId
-                );
-                return (
-                    true,
-                    abi.encode(automatedTimeWithdraw, amountToWithdraw)
-                );
+                return (true, abi.encode(index, amountToWithdraw));
             }
 
             unchecked {
@@ -176,5 +182,52 @@ contract FuroAutomatedTimeWithdraw is
         }
     }
 
-    function performUpkeep(bytes calldata performData) external {}
+    function performUpkeep(bytes calldata performData) external {
+        (uint256 automatedTimeWithdrawId, uint256 amountToWithdraw) = abi
+            .decode(performData, (uint256, uint256));
+        AutomatedTimeWithdraw
+            storage automatedTimeWithdraw = automatedTimeWithdraws[
+                automatedTimeWithdrawId
+            ];
+
+        //check
+        if (
+            automatedTimeWithdraw.streamLastWithdraw +
+                automatedTimeWithdraw.streamWithdrawPeriod >
+            block.timestamp
+        ) {
+            revert ToEarlyToWithdraw();
+        }
+
+        if (automatedTimeWithdraw.vesting) {
+            furoVesting.withdraw(automatedTimeWithdraw.streamId, "", true);
+            address token = address(
+                furoVesting.vests(automatedTimeWithdraw.streamId).token
+            );
+            uint256 amount = bentoBox.balanceOf(token, address(this));
+            if (automatedTimeWithdraw.toBentoBox) {
+                bentoBox.transfer(
+                    token,
+                    address(this),
+                    automatedTimeWithdraw.streamWithdrawTo,
+                    amount
+                );
+            } else {
+                bentoBox.withdraw(
+                    token,
+                    address(this),
+                    automatedTimeWithdraw.streamWithdrawTo,
+                    0,
+                    amount
+                );
+            }
+
+            if (automatedTimeWithdraw.taskData.length > 0) {
+                ITasker(automatedTimeWithdraw.streamWithdrawTo).onTaskReceived(
+                    automatedTimeWithdraw.taskData
+                );
+            }
+            automatedTimeWithdraw.streamLastWithdraw = block.timestamp;
+        }
+    }
 }
