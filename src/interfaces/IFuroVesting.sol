@@ -36,6 +36,8 @@ interface IFuroVesting is IERC721 {
 
     function updateOwner(uint256 vestId, address newOwner) external;
 
+    function vests(uint256 vestId) external returns (Vest memory);
+
     struct VestParams {
         IERC20 token;
         address recipient;
