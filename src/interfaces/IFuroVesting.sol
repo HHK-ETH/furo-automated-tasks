@@ -3,8 +3,9 @@
 pragma solidity ^0.8.13;
 
 import "./IERC20.sol";
+import "./IERC721.sol";
 
-interface IFuroVesting {
+interface IFuroVesting is IERC721 {
     function setBentoBoxApproval(
         address user,
         bool approved,
