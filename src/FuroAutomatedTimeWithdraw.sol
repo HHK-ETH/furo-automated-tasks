@@ -10,21 +10,45 @@ contract FuroAutomatedTimeWithdraw is
     IFuroAutomatedTimeWithdraw,
     KeeperCompatibleInterface
 {
+    /// -----------------------------------------------------------------------
+    /// Errors
+    /// -----------------------------------------------------------------------
+
     error NotOwner();
+
+    /// -----------------------------------------------------------------------
+    /// Events
+    /// -----------------------------------------------------------------------
 
     event AutomatedTimeWithdrawExecution(uint256 streamId, uint256 timestamp);
 
+    /// -----------------------------------------------------------------------
+    /// Immutable variables
+    /// -----------------------------------------------------------------------
+
     IFuroStream internal immutable furoStream;
     IFuroVesting internal immutable furoVesting;
+
+    /// -----------------------------------------------------------------------
+    /// Mutable variables
+    /// -----------------------------------------------------------------------
 
     mapping(uint256 => AutomatedTimeWithdraw) public automatedTimeWithdraws;
 
     uint256 public automatedTimeWithdrawAmount;
 
+    /// -----------------------------------------------------------------------
+    /// Constructor
+    /// -----------------------------------------------------------------------
+
     constructor(address _furoStream, address _furoVesting) {
         furoStream = IFuroStream(_furoStream);
         furoVesting = IFuroVesting(_furoVesting);
     }
+
+    /// -----------------------------------------------------------------------
+    /// State change functions
+    /// -----------------------------------------------------------------------
 
     function createAutomatedWithdraw(
         uint256 streamId,
@@ -111,10 +135,46 @@ contract FuroAutomatedTimeWithdraw is
         delete automatedTimeWithdraws[automatedTimeWithdrawId];
     }
 
+    /// -----------------------------------------------------------------------
+    /// Keepers functions
+    /// -----------------------------------------------------------------------
+
     function checkUpkeep(bytes calldata checkData)
         external
+        view
         returns (bool upkeepNeeded, bytes memory performData)
-    {}
+    {
+        (uint256 index, uint256 stopIndex) = abi.decode(
+            checkData,
+            (uint256, uint256)
+        );
+
+        while (index < stopIndex) {
+            AutomatedTimeWithdraw
+                memory automatedTimeWithdraw = automatedTimeWithdraws[index];
+
+            if (
+                automatedTimeWithdraw.streamLastWithdraw +
+                    automatedTimeWithdraw.streamWithdrawPeriod <
+                block.timestamp
+            ) {
+                if (automatedTimeWithdraw.vesting) {
+                    return (true, abi.encode(automatedTimeWithdraw));
+                }
+                (, uint256 amountToWithdraw) = furoStream.streamBalanceOf(
+                    automatedTimeWithdraw.streamId
+                );
+                return (
+                    true,
+                    abi.encode(automatedTimeWithdraw, amountToWithdraw)
+                );
+            }
+
+            unchecked {
+                index += 1;
+            }
+        }
+    }
 
     function performUpkeep(bytes calldata performData) external {}
 }

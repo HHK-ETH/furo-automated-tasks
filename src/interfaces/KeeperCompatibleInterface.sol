@@ -21,6 +21,7 @@ interface KeeperCompatibleInterface {
      */
     function checkUpkeep(bytes calldata checkData)
         external
+        view
         returns (bool upkeepNeeded, bytes memory performData);
 
     /**
