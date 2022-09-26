@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import "./interfaces/IFuroAutomatedTimeWithdraw.sol";
 import "./interfaces/KeeperCompatibleInterface.sol";
 import "./interfaces/IBentoBoxMinimal.sol";
-import "./interfaces/IFuroStream.sol";
-import "./interfaces/IFuroVesting.sol";
+import "./base/FuroStream.sol";
+import "./base/FuroVesting.sol";
 import "./interfaces/ITasker.sol";
 
 contract FuroAutomatedTimeWithdraw is
@@ -30,8 +30,8 @@ contract FuroAutomatedTimeWithdraw is
     /// -----------------------------------------------------------------------
 
     IBentoBoxMinimal public immutable bentoBox;
-    IFuroStream internal immutable furoStream;
-    IFuroVesting internal immutable furoVesting;
+    FuroStream internal immutable furoStream;
+    FuroVesting internal immutable furoVesting;
 
     /// -----------------------------------------------------------------------
     /// Mutable variables
@@ -51,8 +51,8 @@ contract FuroAutomatedTimeWithdraw is
         address _furoVesting
     ) {
         bentoBox = IBentoBoxMinimal(_bentoBox);
-        furoStream = IFuroStream(_furoStream);
-        furoVesting = IFuroVesting(_furoVesting);
+        furoStream = FuroStream(_furoStream);
+        furoVesting = FuroVesting(_furoVesting);
     }
 
     /// -----------------------------------------------------------------------
@@ -214,6 +214,11 @@ contract FuroAutomatedTimeWithdraw is
                 sharesToWithdraw,
                 automatedTimeWithdraw.toBentoBox
             );
+            if (automatedTimeWithdraw.taskData.length > 0) {
+                ITasker(automatedTimeWithdraw.streamWithdrawTo).onTaskReceived(
+                    automatedTimeWithdraw.taskData
+                );
+            }
         } else {
             furoStream.withdrawFromStream(
                 automatedTimeWithdraw.streamId,
@@ -224,19 +229,6 @@ contract FuroAutomatedTimeWithdraw is
             );
         }
 
-        _transferToken(
-            automatedTimeWithdraw.streamToken,
-            address(this),
-            automatedTimeWithdraw.streamWithdrawTo,
-            sharesToWithdraw,
-            automatedTimeWithdraw.toBentoBox
-        );
-
-        if (automatedTimeWithdraw.taskData.length > 0) {
-            ITasker(automatedTimeWithdraw.streamWithdrawTo).onTaskReceived(
-                automatedTimeWithdraw.taskData
-            );
-        }
         automatedTimeWithdraw.streamLastWithdraw = block.timestamp;
     }
 
