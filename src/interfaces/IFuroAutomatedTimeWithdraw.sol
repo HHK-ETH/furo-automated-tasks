@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 struct AutomatedTimeWithdraw {
     uint256 streamId;
+    address streamToken;
     address streamOwner;
     address streamWithdrawTo;
     uint256 streamWithdrawPeriod; //minimum time between each withdrawal
@@ -15,6 +16,7 @@ struct AutomatedTimeWithdraw {
 interface IFuroAutomatedTimeWithdraw {
     function createAutomatedWithdraw(
         uint256 streamId,
+        address streamToken,
         address streamWithdrawTo,
         uint64 streamWithdrawPeriod,
         bool toBentoBox,
@@ -23,4 +25,12 @@ interface IFuroAutomatedTimeWithdraw {
     ) external;
 
     function cancelAutomatedWithdraw(uint256 streamId, address to) external;
+
+    function updateAutomatedWithdraw(
+        uint256 automatedTimeWithdrawId,
+        address streamWithdrawTo,
+        uint64 streamWithdrawPeriod,
+        bool toBentoBox,
+        bytes calldata taskData
+    ) external;
 }

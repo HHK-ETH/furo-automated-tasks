@@ -61,6 +61,7 @@ contract FuroAutomatedTimeWithdraw is
 
     function createAutomatedWithdraw(
         uint256 streamId,
+        address streamToken,
         address streamWithdrawTo,
         uint64 streamWithdrawPeriod,
         bool toBentoBox,
@@ -83,6 +84,7 @@ contract FuroAutomatedTimeWithdraw is
             automatedTimeWithdrawAmount
         ] = AutomatedTimeWithdraw({
             streamId: streamId,
+            streamToken: streamToken,
             streamOwner: msg.sender,
             streamWithdrawTo: streamWithdrawTo,
             streamWithdrawPeriod: streamWithdrawPeriod,
@@ -167,13 +169,13 @@ contract FuroAutomatedTimeWithdraw is
                     automatedTimeWithdraw.streamWithdrawPeriod <
                 block.timestamp
             ) {
-                uint256 amountToWithdraw;
+                uint256 sharesToWithdraw;
                 if (!automatedTimeWithdraw.vesting) {
-                    (, amountToWithdraw) = furoStream.streamBalanceOf(
+                    (, sharesToWithdraw) = furoStream.streamBalanceOf(
                         automatedTimeWithdraw.streamId
                     );
                 }
-                return (true, abi.encode(index, amountToWithdraw));
+                return (true, abi.encode(index, sharesToWithdraw));
             }
 
             unchecked {
@@ -183,7 +185,7 @@ contract FuroAutomatedTimeWithdraw is
     }
 
     function performUpkeep(bytes calldata performData) external {
-        (uint256 automatedTimeWithdrawId, uint256 amountToWithdraw) = abi
+        (uint256 automatedTimeWithdrawId, uint256 sharesToWithdraw) = abi
             .decode(performData, (uint256, uint256));
         AutomatedTimeWithdraw
             storage automatedTimeWithdraw = automatedTimeWithdraws[
@@ -201,33 +203,54 @@ contract FuroAutomatedTimeWithdraw is
 
         if (automatedTimeWithdraw.vesting) {
             furoVesting.withdraw(automatedTimeWithdraw.streamId, "", true);
-            address token = address(
-                furoVesting.vests(automatedTimeWithdraw.streamId).token
+            sharesToWithdraw = bentoBox.balanceOf(
+                automatedTimeWithdraw.streamToken,
+                address(this)
+            ); //use less gas than vestBalance()
+            _transferToken(
+                automatedTimeWithdraw.streamToken,
+                address(this),
+                automatedTimeWithdraw.streamWithdrawTo,
+                sharesToWithdraw,
+                automatedTimeWithdraw.toBentoBox
             );
-            uint256 amount = bentoBox.balanceOf(token, address(this));
-            if (automatedTimeWithdraw.toBentoBox) {
-                bentoBox.transfer(
-                    token,
-                    address(this),
-                    automatedTimeWithdraw.streamWithdrawTo,
-                    amount
-                );
-            } else {
-                bentoBox.withdraw(
-                    token,
-                    address(this),
-                    automatedTimeWithdraw.streamWithdrawTo,
-                    0,
-                    amount
-                );
-            }
+        } else {
+            furoStream.withdrawFromStream(
+                automatedTimeWithdraw.streamId,
+                sharesToWithdraw,
+                automatedTimeWithdraw.streamWithdrawTo,
+                automatedTimeWithdraw.toBentoBox,
+                automatedTimeWithdraw.taskData
+            );
+        }
 
-            if (automatedTimeWithdraw.taskData.length > 0) {
-                ITasker(automatedTimeWithdraw.streamWithdrawTo).onTaskReceived(
-                    automatedTimeWithdraw.taskData
-                );
-            }
-            automatedTimeWithdraw.streamLastWithdraw = block.timestamp;
+        _transferToken(
+            automatedTimeWithdraw.streamToken,
+            address(this),
+            automatedTimeWithdraw.streamWithdrawTo,
+            sharesToWithdraw,
+            automatedTimeWithdraw.toBentoBox
+        );
+
+        if (automatedTimeWithdraw.taskData.length > 0) {
+            ITasker(automatedTimeWithdraw.streamWithdrawTo).onTaskReceived(
+                automatedTimeWithdraw.taskData
+            );
+        }
+        automatedTimeWithdraw.streamLastWithdraw = block.timestamp;
+    }
+
+    function _transferToken(
+        address token,
+        address from,
+        address to,
+        uint256 shares,
+        bool toBentoBox
+    ) internal {
+        if (toBentoBox) {
+            bentoBox.transfer(token, from, to, shares);
+        } else {
+            bentoBox.withdraw(token, from, to, 0, shares);
         }
     }
 }
