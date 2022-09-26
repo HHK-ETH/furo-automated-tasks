@@ -2,9 +2,14 @@
 
 pragma solidity ^0.8.13;
 
-import "./IERC721.sol";
+import "./ITokenURIFetcher.sol";
+import "../interfaces/IBentoBoxMinimal.sol";
+import "../interfaces/ITasker.sol";
+import "solmate/tokens/ERC721.sol";
+import "./../utils/Multicall.sol";
+import "./../utils/BoringOwnable.sol";
 
-interface IFuroStream is IERC721 {
+interface IFuroStream {
     function setBentoBoxApproval(
         address user,
         bool approved,

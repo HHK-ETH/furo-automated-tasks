@@ -2,10 +2,16 @@
 
 pragma solidity ^0.8.13;
 
+import "./ITokenURIFetcher.sol";
+import "../interfaces/IBentoBoxMinimal.sol";
+import "../interfaces/ITasker.sol";
+import "solmate/tokens/ERC721.sol";
+import "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import "./../utils/Multicall.sol";
+import "./../utils/BoringOwnable.sol";
 import "./IERC20.sol";
-import "./IERC721.sol";
 
-interface IFuroVesting is IERC721 {
+interface IFuroVesting {
     function setBentoBoxApproval(
         address user,
         bool approved,
@@ -35,8 +41,6 @@ interface IFuroVesting is IERC721 {
     function vestBalance(uint256 vestId) external view returns (uint256);
 
     function updateOwner(uint256 vestId, address newOwner) external;
-
-    function vests(uint256 vestId) external returns (Vest memory);
 
     struct VestParams {
         IERC20 token;

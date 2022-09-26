@@ -1,0 +1,4 @@
+forge-std/=/Users/hhk/Documents/solidity/furo-automated-tasks/lib/forge-std/src/
+ds-test/=/Users/hhk/Documents/solidity/furo-automated-tasks/lib/forge-std/lib/ds-test/src/
+solmate/=/Users/hhk/Documents/solidity/furo-automated-tasks/lib/solmate/src/
+openzeppelin-contracts/=/Users/hhk/Documents/solidity/furo-automated-tasks/lib/openzeppelin-contracts/
