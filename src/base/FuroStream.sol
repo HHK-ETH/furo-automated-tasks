@@ -29,11 +29,11 @@ contract FuroStream is
     error NotSender();
     error Overflow();
 
-    constructor(IBentoBoxMinimal _bentoBox, address _wETH) {
-        bentoBox = _bentoBox;
+    constructor(address _bentoBox, address _wETH) {
+        bentoBox = IBentoBoxMinimal(_bentoBox);
         wETH = _wETH;
         streamIds = 1000;
-        _bentoBox.registerProtocol();
+        bentoBox.registerProtocol();
     }
 
     function setTokenURIFetcher(address _fetcher) external onlyOwner {

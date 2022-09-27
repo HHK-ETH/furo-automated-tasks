@@ -15,14 +15,14 @@ contract FuroVestingRouter is Multicall {
     error InsufficientShares();
 
     constructor(
-        IBentoBoxMinimal _bentoBox,
-        IFuroVesting _furoVesting,
+        address _bentoBox,
+        address _furoVesting,
         address _wETH
     ) {
-        bentoBox = _bentoBox;
-        furoVesting = _furoVesting;
+        bentoBox = IBentoBoxMinimal(_bentoBox);
+        furoVesting = IFuroVesting(_furoVesting);
         wETH = _wETH;
-        _bentoBox.setMasterContractApproval(
+        bentoBox.setMasterContractApproval(
             address(this),
             address(_furoVesting),
             true,
@@ -30,7 +30,7 @@ contract FuroVestingRouter is Multicall {
             bytes32(0),
             bytes32(0)
         );
-        _bentoBox.registerProtocol();
+        bentoBox.registerProtocol();
     }
 
     function setBentoBoxApproval(
