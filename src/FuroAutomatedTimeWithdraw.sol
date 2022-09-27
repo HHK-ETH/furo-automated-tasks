@@ -10,7 +10,8 @@ import "./interfaces/ITasker.sol";
 
 contract FuroAutomatedTimeWithdraw is
     IFuroAutomatedTimeWithdraw,
-    KeeperCompatibleInterface
+    KeeperCompatibleInterface,
+    ERC721TokenReceiver
 {
     /// -----------------------------------------------------------------------
     /// Errors
@@ -23,7 +24,10 @@ contract FuroAutomatedTimeWithdraw is
     /// Events
     /// -----------------------------------------------------------------------
 
-    event AutomatedTimeWithdrawExecution(uint256 streamId, uint256 timestamp);
+    event AutomatedTimeWithdrawCreation(uint256 id);
+    event AutomatedTimeWithdrawUpdate(uint256 id);
+    event AutomatedTimeWithdrawCancel(uint256 id);
+    event AutomatedTimeWithdrawExecution(uint256 id, uint256 timestamp);
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
@@ -93,6 +97,8 @@ contract FuroAutomatedTimeWithdraw is
             vesting: vesting,
             taskData: taskData
         });
+
+        emit AutomatedTimeWithdrawCreation(automatedTimeWithdrawAmount);
         automatedTimeWithdrawAmount += 1;
     }
 
@@ -115,6 +121,8 @@ contract FuroAutomatedTimeWithdraw is
         automatedTimeWithdraw.streamWithdrawPeriod = streamWithdrawPeriod;
         automatedTimeWithdraw.toBentoBox = toBentoBox;
         automatedTimeWithdraw.taskData = taskData;
+
+        emit AutomatedTimeWithdrawUpdate(automatedTimeWithdrawId);
     }
 
     function cancelAutomatedWithdraw(
@@ -144,6 +152,7 @@ contract FuroAutomatedTimeWithdraw is
         }
 
         delete automatedTimeWithdraws[automatedTimeWithdrawId];
+        emit AutomatedTimeWithdrawCancel(automatedTimeWithdrawId);
     }
 
     /// -----------------------------------------------------------------------
@@ -230,7 +239,15 @@ contract FuroAutomatedTimeWithdraw is
         }
 
         automatedTimeWithdraw.streamLastWithdraw = block.timestamp;
+        emit AutomatedTimeWithdrawExecution(
+            automatedTimeWithdrawId,
+            block.timestamp
+        );
     }
+
+    /// -----------------------------------------------------------------------
+    /// Internal functions
+    /// -----------------------------------------------------------------------
 
     function _transferToken(
         address token,
