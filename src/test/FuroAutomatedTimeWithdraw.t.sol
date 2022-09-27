@@ -3,10 +3,10 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import {FuroAutomatedTimeWithdraw} from "./../FuroAutomatedTimeWithdraw.sol";
+import {FuroAutomatedTimeWithdraw, ERC721TokenReceiver} from "./../FuroAutomatedTimeWithdraw.sol";
 import {ERC20Mock} from "./../mock/ERC20Mock.sol";
 import {BentoBoxV1, IERC20} from "./../flat/BentoBoxFlat.sol";
-import {FuroStream} from "./../base/FuroStream.sol";
+import {FuroStream, IFuroStream} from "./../base/FuroStream.sol";
 import {FuroStreamRouter} from "./../base/FuroStreamRouter.sol";
 import {FuroVesting, IFuroVesting} from "./../base/FuroVesting.sol";
 import {FuroVestingRouter} from "./../base/FuroVestingRouter.sol";
@@ -25,17 +25,23 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         WETH = new ERC20Mock("WETH", "WETH", 18);
         bentobox = new BentoBoxV1(IERC20(address(WETH)));
         furoStream = new FuroStream(address(bentobox), address(WETH));
+        bentobox.whitelistMasterContract(address(furoStream), true);
         furoStreamRouter = new FuroStreamRouter(
             address(bentobox),
             address(furoStream),
             address(WETH)
         );
+        bentobox.whitelistMasterContract(address(furoStreamRouter), true);
+
         furoVesting = new FuroVesting(address(bentobox), address(WETH));
+        bentobox.whitelistMasterContract((address(furoVesting)), true);
         furoVestingRouter = new FuroVestingRouter(
             address(bentobox),
             address(furoVesting),
             address(WETH)
         );
+        bentobox.whitelistMasterContract((address(furoVestingRouter)), true);
+
         furoAutomatedTimeWithdraw = new FuroAutomatedTimeWithdraw(
             address(bentobox),
             address(furoStream),
@@ -47,7 +53,15 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         address(WETH).call{value: 20 * 1e18}("");
 
         //Create a test stream and approve it
-        WETH.approve(address(furoStreamRouter), 10 * 1e18);
+        WETH.approve(address(bentobox), 10 * 1e18);
+        bentobox.setMasterContractApproval(
+            address(this),
+            address(furoStreamRouter),
+            true,
+            0,
+            bytes32(0),
+            bytes32(0)
+        );
         furoStreamRouter.createStream(
             address(this),
             address(WETH),
@@ -57,10 +71,18 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             false,
             0
         );
-        furoStream.approve(address(furoAutomatedTimeWithdraw), 0);
+        furoStream.approve(address(furoAutomatedTimeWithdraw), 1000);
 
         //Create a test vesting and approve it
-        WETH.approve(address(furoVestingRouter), 10 * 1e18);
+        WETH.approve(address(bentobox), 10 * 1e18);
+        bentobox.setMasterContractApproval(
+            address(this),
+            address(furoVestingRouter),
+            true,
+            0,
+            bytes32(0),
+            bytes32(0)
+        );
         furoVestingRouter.createVesting(
             IFuroVesting.VestParams({
                 token: address(WETH),
@@ -75,6 +97,50 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             }),
             0
         );
-        furoVesting.approve(address(furoAutomatedTimeWithdraw), 0);
+        furoVesting.approve(address(furoAutomatedTimeWithdraw), 1);
+    }
+
+    function testCreateStreamAutomaticTimeWithdraw() public {
+        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+            1000,
+            address(WETH),
+            address(this),
+            600,
+            false,
+            false,
+            ""
+        );
+    }
+
+    function testCreateVestingAutomaticTimeWithdraw() public {
+        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+            1,
+            address(WETH),
+            address(this),
+            600,
+            false,
+            true,
+            ""
+        );
+    }
+
+    function testUpdateAutomaticTimeWithdraw() public {}
+
+    function testFailUpdateAutomaticTimeWithdraw_NotOwner() public {
+        revert();
+    }
+
+    function testCancelStreamAutomaticTimeWithdraw() public {}
+
+    function testCancelVestingAutomaticTimeWithdraw() public {}
+
+    function testFailCancelAutomaticTimeWithdraw_NotOwner() public {
+        revert();
+    }
+
+    function testPerformUpKeep() public {}
+
+    function testFailPerformUpKeep_ToEarly() public {
+        revert();
     }
 }
