@@ -263,6 +263,10 @@ contract FuroAutomatedTimeWithdraw is
         }
     }
 
+    /// -----------------------------------------------------------------------
+    /// View functions
+    /// -----------------------------------------------------------------------
+
     function getAutomatedTimeWithdraw(uint256 id)
         external
         view
