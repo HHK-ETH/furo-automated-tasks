@@ -97,9 +97,9 @@ contract FuroVesting is
 
         vests[vestId] = Vest({
             owner: msg.sender,
-            token: address(vestParams.token) == address(0)
+            token: vestParams.token == address(0)
                 ? IERC20(wETH)
-                : vestParams.token,
+                : IERC20(vestParams.token),
             start: vestParams.start,
             cliffDuration: vestParams.cliffDuration,
             stepDuration: vestParams.stepDuration,
@@ -111,7 +111,7 @@ contract FuroVesting is
 
         emit CreateVesting(
             vestId,
-            vestParams.token,
+            IERC20(vestParams.token),
             msg.sender,
             vestParams.recipient,
             vestParams.start,

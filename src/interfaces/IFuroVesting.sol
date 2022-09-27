@@ -43,7 +43,7 @@ interface IFuroVesting {
     function updateOwner(uint256 vestId, address newOwner) external;
 
     struct VestParams {
-        IERC20 token;
+        address token;
         address recipient;
         uint32 start;
         uint32 cliffDuration;
