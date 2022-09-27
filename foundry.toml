@@ -1,2 +1,4 @@
-[ci]
+[profile.default]
 fuzz-runs = 10_000
+optimizer = true
+optimizer_runs = 20_000
