@@ -41,9 +41,9 @@ contract FuroAutomatedTimeWithdraw is
     /// Mutable variables
     /// -----------------------------------------------------------------------
 
-    mapping(uint256 => AutomatedTimeWithdraw) public automatedTimeWithdraws;
+    mapping(uint256 => AutomatedTimeWithdraw) internal automatedTimeWithdraws;
 
-    uint256 public automatedTimeWithdrawAmount;
+    uint256 internal automatedTimeWithdrawAmount;
 
     /// -----------------------------------------------------------------------
     /// Constructor
@@ -261,5 +261,13 @@ contract FuroAutomatedTimeWithdraw is
         } else {
             bentoBox.withdraw(token, from, to, 0, shares);
         }
+    }
+
+    function getAutomatedTimeWithdraw(uint256 id)
+        external
+        view
+        returns (AutomatedTimeWithdraw memory)
+    {
+        return automatedTimeWithdraws[id];
     }
 }

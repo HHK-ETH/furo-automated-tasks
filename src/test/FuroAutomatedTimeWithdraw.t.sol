@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import {FuroAutomatedTimeWithdraw, ERC721TokenReceiver} from "./../FuroAutomatedTimeWithdraw.sol";
+import {FuroAutomatedTimeWithdraw, ERC721TokenReceiver, AutomatedTimeWithdraw} from "./../FuroAutomatedTimeWithdraw.sol";
 import {ERC20Mock} from "./../mock/ERC20Mock.sol";
 import {BentoBoxV1, IERC20} from "./../flat/BentoBoxFlat.sol";
 import {FuroStream, IFuroStream} from "./../base/FuroStream.sol";
@@ -110,6 +110,9 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             false,
             ""
         );
+        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
+            .getAutomatedTimeWithdraw(0);
+        assertEq(data.streamId, 1000);
     }
 
     function testCreateVestingAutomaticTimeWithdraw() public {
@@ -122,6 +125,9 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             true,
             ""
         );
+        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
+            .getAutomatedTimeWithdraw(0);
+        assertEq(data.streamId, 1);
     }
 
     function testUpdateAutomaticTimeWithdraw() public {}
