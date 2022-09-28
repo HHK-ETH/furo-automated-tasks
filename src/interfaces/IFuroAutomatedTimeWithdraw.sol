@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-struct AutomatedTimeWithdraw {
+struct Task {
     uint256 streamId;
     address streamToken;
     address streamOwner;
@@ -14,7 +14,7 @@ struct AutomatedTimeWithdraw {
 }
 
 interface IFuroAutomatedTimeWithdraw {
-    function createAutomatedWithdraw(
+    function createTask(
         uint256 streamId,
         address streamToken,
         address streamWithdrawTo,
@@ -24,10 +24,10 @@ interface IFuroAutomatedTimeWithdraw {
         bytes calldata taskData
     ) external;
 
-    function cancelAutomatedWithdraw(uint256 streamId, address to) external;
+    function cancelTask(uint256 taskId, address to) external;
 
-    function updateAutomatedWithdraw(
-        uint256 automatedTimeWithdrawId,
+    function updateTask(
+        uint256 taskId,
         address streamWithdrawTo,
         uint64 streamWithdrawPeriod,
         bool toBentoBox,

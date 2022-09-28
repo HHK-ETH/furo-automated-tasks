@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import {FuroAutomatedTimeWithdraw, ERC721TokenReceiver, AutomatedTimeWithdraw} from "./../FuroAutomatedTimeWithdraw.sol";
+import {FuroAutomatedTimeWithdraw, ERC721TokenReceiver, Task} from "./../FuroAutomatedTimeWithdraw.sol";
 import {ERC20Mock} from "./../mock/ERC20Mock.sol";
 import {BentoBoxV1, IERC20} from "./../flat/BentoBoxFlat.sol";
 import {FuroStream, IFuroStream} from "./../base/FuroStream.sol";
@@ -101,7 +101,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
     }
 
     function testCreateStreamAutomaticTimeWithdraw() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -110,18 +110,17 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             false,
             ""
         );
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
-        assertEq(data.streamId, 1000);
-        assertEq(data.streamToken, address(WETH));
-        assertEq(data.streamWithdrawTo, address(this));
-        assertEq(data.streamWithdrawPeriod, 600);
-        assertEq(data.toBentoBox, false);
-        assertEq(data.taskData, "");
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
+        assertEq(task.streamId, 1000);
+        assertEq(task.streamToken, address(WETH));
+        assertEq(task.streamWithdrawTo, address(this));
+        assertEq(task.streamWithdrawPeriod, 600);
+        assertEq(task.toBentoBox, false);
+        assertEq(task.taskData, "");
     }
 
     function testCreateVestingAutomaticTimeWithdraw() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1,
             address(WETH),
             address(this),
@@ -130,18 +129,17 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             true,
             ""
         );
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
-        assertEq(data.streamId, 1);
-        assertEq(data.streamToken, address(WETH));
-        assertEq(data.streamWithdrawTo, address(this));
-        assertEq(data.streamWithdrawPeriod, 600);
-        assertEq(data.toBentoBox, false);
-        assertEq(data.taskData, "");
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
+        assertEq(task.streamId, 1);
+        assertEq(task.streamToken, address(WETH));
+        assertEq(task.streamWithdrawTo, address(this));
+        assertEq(task.streamWithdrawPeriod, 600);
+        assertEq(task.toBentoBox, false);
+        assertEq(task.taskData, "");
     }
 
     function testUpdateAutomaticTimeWithdraw() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -150,23 +148,16 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             false,
             ""
         );
-        furoAutomatedTimeWithdraw.updateAutomatedWithdraw(
-            0,
-            address(this),
-            300,
-            true,
-            ""
-        );
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
-        assertEq(data.streamWithdrawTo, address(this));
-        assertEq(data.streamWithdrawPeriod, 300);
-        assertEq(data.toBentoBox, true);
-        assertEq(data.taskData, "");
+        furoAutomatedTimeWithdraw.updateTask(0, address(this), 300, true, "");
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
+        assertEq(task.streamWithdrawTo, address(this));
+        assertEq(task.streamWithdrawPeriod, 300);
+        assertEq(task.toBentoBox, true);
+        assertEq(task.taskData, "");
     }
 
     function testFailUpdateAutomaticTimeWithdraw_NotOwner() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -176,17 +167,11 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             ""
         );
         vm.prank(address(1));
-        furoAutomatedTimeWithdraw.updateAutomatedWithdraw(
-            0,
-            address(this),
-            300,
-            true,
-            ""
-        );
+        furoAutomatedTimeWithdraw.updateTask(0, address(this), 300, true, "");
     }
 
     function testCancelStreamAutomaticTimeWithdraw() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -195,15 +180,14 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             false,
             ""
         );
-        furoAutomatedTimeWithdraw.cancelAutomatedWithdraw(0, address(1));
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
-        assertEq(data.streamId, 0); //struct successfully deleted
+        furoAutomatedTimeWithdraw.cancelTask(0, address(1));
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
+        assertEq(task.streamId, 0); //struct successfully deleted
         assertEq(furoStream.ownerOf(1000), address(1));
     }
 
     function testCancelVestingAutomaticTimeWithdraw() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1,
             address(WETH),
             address(this),
@@ -212,15 +196,14 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             true,
             ""
         );
-        furoAutomatedTimeWithdraw.cancelAutomatedWithdraw(0, address(1));
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
-        assertEq(data.streamId, 0); //struct successfully deleted
+        furoAutomatedTimeWithdraw.cancelTask(0, address(1));
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
+        assertEq(task.streamId, 0); //struct successfully deleted
         assertEq(furoVesting.ownerOf(1), address(1));
     }
 
     function testFailCancelAutomaticTimeWithdraw_NotOwner() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -230,11 +213,11 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             ""
         );
         vm.prank(address(1));
-        furoAutomatedTimeWithdraw.cancelAutomatedWithdraw(0, address(1));
+        furoAutomatedTimeWithdraw.cancelTask(0, address(1));
     }
 
     function testCheckUpKeep() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -263,7 +246,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
     }
 
     function testStreamPerformUpKeep() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),
@@ -278,15 +261,14 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             abi.encode(0, 5)
         );
         furoAutomatedTimeWithdraw.performUpkeep(performData);
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
         (, uint256 streamBalance) = furoStream.streamBalanceOf(1000);
-        assertEq(data.streamLastWithdraw, block.timestamp);
+        assertEq(task.streamLastWithdraw, block.timestamp);
         assertEq(streamBalance, 0);
     }
 
     function testVestingPerformUpKeep() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1,
             address(WETH),
             address(this),
@@ -301,15 +283,14 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             abi.encode(0, 5)
         );
         furoAutomatedTimeWithdraw.performUpkeep(performData);
-        AutomatedTimeWithdraw memory data = furoAutomatedTimeWithdraw
-            .getAutomatedTimeWithdraw(0);
+        Task memory task = furoAutomatedTimeWithdraw.getTask(0);
         uint256 vestBalance = furoVesting.vestBalance(1);
-        assertEq(data.streamLastWithdraw, block.timestamp);
+        assertEq(task.streamLastWithdraw, block.timestamp);
         assertEq(vestBalance, 0);
     }
 
     function testFailPerformUpKeep_ToEarly() public {
-        furoAutomatedTimeWithdraw.createAutomatedWithdraw(
+        furoAutomatedTimeWithdraw.createTask(
             1000,
             address(WETH),
             address(this),

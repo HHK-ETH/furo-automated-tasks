@@ -24,10 +24,10 @@ contract FuroAutomatedTimeWithdraw is
     /// Events
     /// -----------------------------------------------------------------------
 
-    event AutomatedTimeWithdrawCreation(uint256 id);
-    event AutomatedTimeWithdrawUpdate(uint256 id);
-    event AutomatedTimeWithdrawCancel(uint256 id);
-    event AutomatedTimeWithdrawExecution(uint256 id, uint256 timestamp);
+    event TaskCreation(uint256 taskId);
+    event TaskUpdate(uint256 taskId);
+    event TaskCancel(uint256 taskId);
+    event TaskExecution(uint256 taskId, uint256 timestamp);
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
@@ -41,14 +41,19 @@ contract FuroAutomatedTimeWithdraw is
     /// Mutable variables
     /// -----------------------------------------------------------------------
 
-    mapping(uint256 => AutomatedTimeWithdraw) internal automatedTimeWithdraws;
+    ///@notice TaskId => Task struct
+    mapping(uint256 => Task) internal tasks;
 
-    uint256 internal automatedTimeWithdrawAmount;
+    ///@notice Task amount, used to increment the mapping
+    uint256 internal taskCount;
 
     /// -----------------------------------------------------------------------
     /// Constructor
     /// -----------------------------------------------------------------------
 
+    ///@param _bentoBox Address of the BentoBox contract
+    ///@param _furoStream Address of the furoStream contract
+    ///@param _furoVesting Address of the furoVesting contract
     constructor(
         address _bentoBox,
         address _furoStream,
@@ -63,7 +68,15 @@ contract FuroAutomatedTimeWithdraw is
     /// State change functions
     /// -----------------------------------------------------------------------
 
-    function createAutomatedWithdraw(
+    ///@notice Transfer Furo NFT to the contract and create an automated time withdraw task
+    ///@param streamId Furo stream/vest id
+    ///@param streamToken Furo stream/vest token address
+    ///@param streamWithdrawTo Furo stream/vest to withdraw to
+    ///@param streamWithdrawPeriod Minimum time between 2 automatic withdraw
+    ///@param toBentoBox True if should withdraw to BentoBox
+    ///@param vesting True for vesting and false for a stream
+    ///@param taskData Calldata to execute on each withdraw on streamWithdrawTo address
+    function createTask(
         uint256 streamId,
         address streamToken,
         address streamWithdrawTo,
@@ -84,9 +97,7 @@ contract FuroAutomatedTimeWithdraw is
             furoStream.safeTransferFrom(msg.sender, address(this), streamId);
         }
 
-        automatedTimeWithdraws[
-            automatedTimeWithdrawAmount
-        ] = AutomatedTimeWithdraw({
+        tasks[taskCount] = Task({
             streamId: streamId,
             streamToken: streamToken,
             streamOwner: msg.sender,
@@ -98,67 +109,61 @@ contract FuroAutomatedTimeWithdraw is
             taskData: taskData
         });
 
-        emit AutomatedTimeWithdrawCreation(automatedTimeWithdrawAmount);
-        automatedTimeWithdrawAmount += 1;
+        emit TaskCreation(taskCount);
+        taskCount += 1;
     }
 
-    function updateAutomatedWithdraw(
-        uint256 automatedTimeWithdrawId,
+    ///@notice Update an existing automated time withdraw task
+    ///@param taskId Id of the task
+    ///@param streamWithdrawTo Furo stream/vest to withdraw to
+    ///@param streamWithdrawPeriod Minimum time between 2 automatic withdraw
+    ///@param toBentoBox True if should withdraw to BentoBox
+    ///@param taskData Calldata to execute on each withdraw on streamWithdrawTo address
+    function updateTask(
+        uint256 taskId,
         address streamWithdrawTo,
         uint64 streamWithdrawPeriod,
         bool toBentoBox,
         bytes calldata taskData
     ) external {
-        AutomatedTimeWithdraw
-            storage automatedTimeWithdraw = automatedTimeWithdraws[
-                automatedTimeWithdrawId
-            ];
-        if (msg.sender != automatedTimeWithdraw.streamOwner) {
+        Task storage task = tasks[taskId];
+        if (msg.sender != task.streamOwner) {
             revert NotOwner();
         }
 
-        automatedTimeWithdraw.streamWithdrawTo = streamWithdrawTo;
-        automatedTimeWithdraw.streamWithdrawPeriod = streamWithdrawPeriod;
-        automatedTimeWithdraw.toBentoBox = toBentoBox;
-        automatedTimeWithdraw.taskData = taskData;
+        task.streamWithdrawTo = streamWithdrawTo;
+        task.streamWithdrawPeriod = streamWithdrawPeriod;
+        task.toBentoBox = toBentoBox;
+        task.taskData = taskData;
 
-        emit AutomatedTimeWithdrawUpdate(automatedTimeWithdrawId);
+        emit TaskUpdate(taskId);
     }
 
-    function cancelAutomatedWithdraw(
-        uint256 automatedTimeWithdrawId,
-        address to
-    ) external {
-        AutomatedTimeWithdraw
-            memory automatedTimeWithdraw = automatedTimeWithdraws[
-                automatedTimeWithdrawId
-            ];
-        if (msg.sender != automatedTimeWithdraw.streamOwner) {
+    ///@notice Cancel an existing automated time withdraw task and send back the Furo NFT
+    ///@param taskId Id of the task
+    ///@param to Address to send the Furo NFT to
+    function cancelTask(uint256 taskId, address to) external {
+        Task memory task = tasks[taskId];
+        if (msg.sender != task.streamOwner) {
             revert NotOwner();
         }
 
-        if (automatedTimeWithdraw.vesting) {
-            furoVesting.safeTransferFrom(
-                address(this),
-                to,
-                automatedTimeWithdraw.streamId
-            );
+        if (task.vesting) {
+            furoVesting.safeTransferFrom(address(this), to, task.streamId);
         } else {
-            furoStream.safeTransferFrom(
-                address(this),
-                to,
-                automatedTimeWithdraw.streamId
-            );
+            furoStream.safeTransferFrom(address(this), to, task.streamId);
         }
 
-        delete automatedTimeWithdraws[automatedTimeWithdrawId];
-        emit AutomatedTimeWithdrawCancel(automatedTimeWithdrawId);
+        delete tasks[taskId];
+        emit TaskCancel(taskId);
     }
 
     /// -----------------------------------------------------------------------
     /// Keepers functions
     /// -----------------------------------------------------------------------
 
+    ///@notice Function checked by Chainlink keepers on each block to know if a task need to be executed
+    ///@param checkData Start and Stop index to loop into the mapping looking for tasks to execute
     function checkUpkeep(bytes calldata checkData)
         external
         view
@@ -170,18 +175,16 @@ contract FuroAutomatedTimeWithdraw is
         );
 
         while (index < stopIndex) {
-            AutomatedTimeWithdraw
-                memory automatedTimeWithdraw = automatedTimeWithdraws[index];
+            Task memory task = tasks[index];
 
             if (
-                automatedTimeWithdraw.streamLastWithdraw +
-                    automatedTimeWithdraw.streamWithdrawPeriod <
+                task.streamLastWithdraw + task.streamWithdrawPeriod <
                 block.timestamp
             ) {
                 uint256 sharesToWithdraw;
-                if (!automatedTimeWithdraw.vesting) {
+                if (!task.vesting) {
                     (, sharesToWithdraw) = furoStream.streamBalanceOf(
-                        automatedTimeWithdraw.streamId
+                        task.streamId
                     );
                 }
                 return (true, abi.encode(index, sharesToWithdraw));
@@ -193,62 +196,63 @@ contract FuroAutomatedTimeWithdraw is
         }
     }
 
+    ///@notice Function called by Chainlink keepers if checkUpKeep return true, execute an automated time withdraw task
+    ///@param performData TaskId and sharesToWitdraw from the Furo stream/vesting
     function performUpkeep(bytes calldata performData) external {
-        (uint256 automatedTimeWithdrawId, uint256 sharesToWithdraw) = abi
-            .decode(performData, (uint256, uint256));
-        AutomatedTimeWithdraw
-            storage automatedTimeWithdraw = automatedTimeWithdraws[
-                automatedTimeWithdrawId
-            ];
+        (uint256 taskId, uint256 sharesToWithdraw) = abi.decode(
+            performData,
+            (uint256, uint256)
+        );
+        Task storage task = tasks[taskId];
 
-        //check
+        //check if not too early
         if (
-            automatedTimeWithdraw.streamLastWithdraw +
-                automatedTimeWithdraw.streamWithdrawPeriod >
+            task.streamLastWithdraw + task.streamWithdrawPeriod >
             block.timestamp
         ) {
             revert ToEarlyToWithdraw();
         }
 
-        if (automatedTimeWithdraw.vesting) {
-            furoVesting.withdraw(automatedTimeWithdraw.streamId, "", true);
+        if (task.vesting) {
+            furoVesting.withdraw(task.streamId, "", true);
             sharesToWithdraw = bentoBox.balanceOf(
-                automatedTimeWithdraw.streamToken,
+                task.streamToken,
                 address(this)
             ); //use less gas than vestBalance()
             _transferToken(
-                automatedTimeWithdraw.streamToken,
+                task.streamToken,
                 address(this),
-                automatedTimeWithdraw.streamWithdrawTo,
+                task.streamWithdrawTo,
                 sharesToWithdraw,
-                automatedTimeWithdraw.toBentoBox
+                task.toBentoBox
             );
-            if (automatedTimeWithdraw.taskData.length > 0) {
-                ITasker(automatedTimeWithdraw.streamWithdrawTo).onTaskReceived(
-                    automatedTimeWithdraw.taskData
-                );
+            if (task.taskData.length > 0) {
+                ITasker(task.streamWithdrawTo).onTaskReceived(task.taskData);
             }
         } else {
             furoStream.withdrawFromStream(
-                automatedTimeWithdraw.streamId,
+                task.streamId,
                 sharesToWithdraw,
-                automatedTimeWithdraw.streamWithdrawTo,
-                automatedTimeWithdraw.toBentoBox,
-                automatedTimeWithdraw.taskData
+                task.streamWithdrawTo,
+                task.toBentoBox,
+                task.taskData
             );
         }
 
-        automatedTimeWithdraw.streamLastWithdraw = block.timestamp;
-        emit AutomatedTimeWithdrawExecution(
-            automatedTimeWithdrawId,
-            block.timestamp
-        );
+        task.streamLastWithdraw = block.timestamp;
+        emit TaskExecution(taskId, block.timestamp);
     }
 
     /// -----------------------------------------------------------------------
     /// Internal functions
     /// -----------------------------------------------------------------------
 
+    ///@notice Helper function to transfer/withdraw tokens from bentobox
+    ///@param token Address of the token to transfer
+    ///@param from Address sending the tokens
+    ///@param to Address receiving the tokens
+    ///@param shares Shares to transfer/deposit
+    ///@param toBentoBox True if stays in bentobox, false if withdraws from bentobox
     function _transferToken(
         address token,
         address from,
@@ -267,11 +271,10 @@ contract FuroAutomatedTimeWithdraw is
     /// View functions
     /// -----------------------------------------------------------------------
 
-    function getAutomatedTimeWithdraw(uint256 id)
-        external
-        view
-        returns (AutomatedTimeWithdraw memory)
-    {
-        return automatedTimeWithdraws[id];
+    ///@notice Getter function to get task infos
+    ///@param taskId Id of the task
+    ///@return Task Task struct containing all its informations
+    function getTask(uint256 taskId) external view returns (Task memory) {
+        return tasks[taskId];
     }
 }
