@@ -273,7 +273,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         furoAutomatedTimeWithdraw.performUpkeep(performData);
         Task memory task = furoAutomatedTimeWithdraw.getTask(0);
         (, uint256 streamBalance) = furoStream.streamBalanceOf(1000);
-        assertEq(task.streamLastWithdraw, block.timestamp);
+        assertEq(task.streamLastWithdraw, uint128(block.timestamp));
         assertEq(streamBalance, 0);
     }
 
@@ -296,7 +296,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         furoAutomatedTimeWithdraw.performUpkeep(performData);
         Task memory task = furoAutomatedTimeWithdraw.getTask(0);
         uint256 vestBalance = furoVesting.vestBalance(1);
-        assertEq(task.streamLastWithdraw, block.timestamp);
+        assertEq(task.streamLastWithdraw, uint128(block.timestamp));
         assertEq(vestBalance, 0);
     }
 

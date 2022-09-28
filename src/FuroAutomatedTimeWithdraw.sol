@@ -80,7 +80,7 @@ contract FuroAutomatedTimeWithdraw is
         uint256 streamId,
         address streamToken,
         address streamWithdrawTo,
-        uint64 streamWithdrawPeriod,
+        uint32 streamWithdrawPeriod,
         bool toBentoBox,
         bool vesting,
         bytes calldata taskData
@@ -103,14 +103,16 @@ contract FuroAutomatedTimeWithdraw is
             streamOwner: msg.sender,
             streamWithdrawTo: streamWithdrawTo,
             streamWithdrawPeriod: streamWithdrawPeriod,
-            streamLastWithdraw: block.timestamp,
+            streamLastWithdraw: uint128(block.timestamp),
             toBentoBox: toBentoBox,
             vesting: vesting,
             taskData: taskData
         });
 
         emit TaskCreation(taskCount);
-        taskCount += 1;
+        unchecked {
+            taskCount += 1;
+        }
     }
 
     ///@notice Update an existing automated time withdraw task
@@ -122,7 +124,7 @@ contract FuroAutomatedTimeWithdraw is
     function updateTask(
         uint256 taskId,
         address streamWithdrawTo,
-        uint64 streamWithdrawPeriod,
+        uint32 streamWithdrawPeriod,
         bool toBentoBox,
         bytes calldata taskData
     ) external {
@@ -239,7 +241,7 @@ contract FuroAutomatedTimeWithdraw is
             );
         }
 
-        task.streamLastWithdraw = block.timestamp;
+        task.streamLastWithdraw = uint128(block.timestamp);
         emit TaskExecution(taskId, block.timestamp);
     }
 
