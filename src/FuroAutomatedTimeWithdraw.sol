@@ -180,6 +180,7 @@ contract FuroAutomatedTimeWithdraw is
             Task memory task = tasks[index];
 
             if (
+                task.streamLastWithdraw != 0 &&
                 task.streamLastWithdraw + task.streamWithdrawPeriod <
                 block.timestamp
             ) {
@@ -209,6 +210,7 @@ contract FuroAutomatedTimeWithdraw is
 
         //check if not too early
         if (
+            task.streamLastWithdraw != 0 &&
             task.streamLastWithdraw + task.streamWithdrawPeriod >
             block.timestamp
         ) {

@@ -1,4 +1,5 @@
 [profile.default]
 fuzz-runs = 10_000
 optimizer = true
-optimizer_runs = 20_000
+optimizer_runs = 500
+gas_reports = ["FuroAutomatedTimeWithdraw"]
