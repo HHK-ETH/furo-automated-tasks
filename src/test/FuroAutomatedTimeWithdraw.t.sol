@@ -20,6 +20,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
     FuroVestingRouter furoVestingRouter;
     FuroAutomatedTimeWithdraw furoAutomatedTimeWithdraw;
 
+    ///@notice Deploy contracts needed for each tests
     function setUp() public {
         //Deploy contracts needed
         WETH = new ERC20Mock("WETH", "WETH", 18);
@@ -100,6 +101,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         furoVesting.approve(address(furoAutomatedTimeWithdraw), 1);
     }
 
+    ///@notice Try to create a task from a Furo stream
     function testCreateStreamAutomaticTimeWithdraw() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -119,6 +121,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(task.taskData, "");
     }
 
+    ///@notice Try to create a task from a Furo vesting
     function testCreateVestingAutomaticTimeWithdraw() public {
         furoAutomatedTimeWithdraw.createTask(
             1,
@@ -138,6 +141,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(task.taskData, "");
     }
 
+    ///@notice Try to update an existing task
     function testUpdateAutomaticTimeWithdraw() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -156,6 +160,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(task.taskData, "");
     }
 
+    ///@notice Try to update a task without being its owner
     function testFailUpdateAutomaticTimeWithdraw_NotOwner() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -170,6 +175,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         furoAutomatedTimeWithdraw.updateTask(0, address(this), 300, true, "");
     }
 
+    ///@notice Try to cancel a Furo stream task
     function testCancelStreamAutomaticTimeWithdraw() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -186,6 +192,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(furoStream.ownerOf(1000), address(1));
     }
 
+    ///@notice Try to cancel a Furo vesting task
     function testCancelVestingAutomaticTimeWithdraw() public {
         furoAutomatedTimeWithdraw.createTask(
             1,
@@ -202,6 +209,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(furoVesting.ownerOf(1), address(1));
     }
 
+    ///@notice Try to cancel a task without being its owner
     function testFailCancelAutomaticTimeWithdraw_NotOwner() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -216,6 +224,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         furoAutomatedTimeWithdraw.cancelTask(0, address(1));
     }
 
+    ///@notice Check if CheckUpKeep return true only when a task can indeed be executed
     function testCheckUpKeep() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -245,6 +254,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(sharesToWithdraw, streamBalance);
     }
 
+    ///@notice Try to execute a Furo stream task that is ready to be executed
     function testStreamPerformUpKeep() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
@@ -267,6 +277,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(streamBalance, 0);
     }
 
+    ///@notice Try to execute a Furo vesting task that is ready to be executed
     function testVestingPerformUpKeep() public {
         furoAutomatedTimeWithdraw.createTask(
             1,
@@ -289,6 +300,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         assertEq(vestBalance, 0);
     }
 
+    ///@notice Try to execute a task that is not ready to be executed
     function testFailPerformUpKeep_ToEarly() public {
         furoAutomatedTimeWithdraw.createTask(
             1000,
