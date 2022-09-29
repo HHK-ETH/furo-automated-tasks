@@ -238,7 +238,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         (
             bool upkeepNeeded,
             bytes memory performData
-        ) = furoAutomatedTimeWithdraw.checkUpkeep(abi.encode(0, 5));
+        ) = furoAutomatedTimeWithdraw.checkUpkeep(abi.encode(0, 500));
         assertEq(upkeepNeeded, false); //to early
         assertEq(performData, "");
         //increase timestamp and check again
@@ -312,7 +312,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             ""
         );
         //0 as streamId & 0 as stream didn't start
-        bytes memory performData = abi.encode(0, 0);
+        bytes memory performData = abi.encode(0, 500);
         furoAutomatedTimeWithdraw.performUpkeep(performData);
     }
 }
