@@ -24,10 +24,10 @@ contract FuroAutomatedTimeWithdraw is
     /// Events
     /// -----------------------------------------------------------------------
 
-    event TaskCreation(uint256 taskId);
-    event TaskUpdate(uint256 taskId);
-    event TaskCancel(uint256 taskId);
-    event TaskExecution(uint256 taskId, uint256 timestamp);
+    event TaskCreation(uint256 indexed taskId);
+    event TaskUpdate(uint256 indexed taskId);
+    event TaskCancel(uint256 indexed taskId);
+    event TaskExecution(uint256 indexed taskId, uint256 timestamp);
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
