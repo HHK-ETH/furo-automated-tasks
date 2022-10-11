@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.13;
 
 import "./interfaces/IFuroAutomatedTimeWithdraw.sol";
 import "./interfaces/KeeperCompatibleInterface.sol";
 import "./interfaces/IBentoBoxMinimal.sol";
-import "./base/FuroStream.sol";
-import "./base/FuroVesting.sol";
+import "./furo/FuroStream.sol";
+import "./furo/FuroVesting.sol";
 import "./interfaces/ITasker.sol";
 
 contract FuroAutomatedTimeWithdraw is
