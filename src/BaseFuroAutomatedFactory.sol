@@ -74,7 +74,7 @@ abstract contract BaseFuroAutomatedFactory {
             address(furoAutomated),
             furoAutomated.executeTask.selector,
             address(furoAutomated),
-            abi.encodeWithSelector(furoAutomated.checker.selector)
+            abi.encodeWithSelector(furoAutomated.checkTask.selector)
         );
     }
 
