@@ -41,7 +41,7 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
     function _createFuroAutomated(bytes calldata data)
         internal
         override
-        returns (FuroAutomatedTime furoAutomated)
+        returns (BaseFuroAutomated furoAutomated)
     {
         (
             uint256 id,
@@ -56,15 +56,18 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
                 (uint256, address, address, uint32, bool, bool, bytes)
             );
 
-        bytes memory cloneData = abi.encodePacked(
-            vesting ? address(furoVesting) : address(furoStream),
-            msg.sender,
-            token,
-            vesting,
-            id
-        );
         furoAutomated = FuroAutomatedTime(
-            address(implementation).clone(cloneData)
+            address(implementation).clone(
+                abi.encodePacked(
+                    address(bentoBox),
+                    address(this),
+                    vesting ? address(furoVesting) : address(furoStream),
+                    msg.sender,
+                    token,
+                    vesting,
+                    id
+                )
+            )
         );
 
         if (vesting) {
@@ -77,6 +80,8 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
             furoStream.safeTransferFrom(msg.sender, address(furoAutomated), id);
         }
 
-        furoAutomated.init(withdrawTo, withdrawPeriod, toBentoBox, taskData);
+        furoAutomated.updateTask(
+            abi.encodePacked(withdrawTo, withdrawPeriod, toBentoBox, taskData)
+        );
     }
 }

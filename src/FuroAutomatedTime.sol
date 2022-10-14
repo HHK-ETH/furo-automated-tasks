@@ -10,14 +10,12 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// Errors
     /// -----------------------------------------------------------------------
 
-    error NotOwner();
     error ToEarlyToWithdraw();
 
     /// -----------------------------------------------------------------------
     /// Events
     /// -----------------------------------------------------------------------
 
-    event TaskInit();
     event TaskUpdate();
     event TaskCancel();
     event TaskExecute(uint256 timestamp);
@@ -26,28 +24,16 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// Immutable variables
     /// -----------------------------------------------------------------------
 
-    function furo() public pure returns (address) {
-        return _getArgAddress(20);
-    }
-
-    function owner() public pure returns (address) {
-        return _getArgAddress(40);
-    }
-
-    function token() public pure returns (address) {
-        return _getArgAddress(60);
-    }
-
     function vesting() public pure returns (bool) {
-        return _getArgBool(80);
+        return _getArgBool(100);
     }
 
-    function id() internal returns (uint256) {
-        return _getArgUint256(81);
+    function id() public pure returns (uint256) {
+        return _getArgUint256(101);
     }
 
     /// -----------------------------------------------------------------------
-    /// mutable variables
+    /// Mutable variables
     /// -----------------------------------------------------------------------
 
     address public withdrawTo;
@@ -60,34 +46,30 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// State change functions
     /// -----------------------------------------------------------------------
 
-    ///@notice Init the contract variables
-    ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
-    function init(bytes calldata data) external override {
-        (
-            address withdrawTo,
-            uint256 withdrawPeriod,
-            bool toBentoBox,
-            bytes memory taskData
-        ) = abi.decode(data, (address, uint256, bool, bytes));
-        emit TaskInit();
-    }
-
     ///@notice Update contract variables
     ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
-    function updateTask(bytes calldata data) external override {
+    function updateTask(bytes calldata data)
+        external
+        override
+        onlyOwnerOrFactory
+    {
         (
-            address withdrawTo,
-            uint256 withdrawPeriod,
-            bool toBentoBox,
-            bytes memory taskData
-        ) = abi.decode(data, (address, uint256, bool, bytes));
+            address _withdrawTo,
+            uint32 _withdrawPeriod,
+            bool _toBentoBox,
+            bytes memory _taskData
+        ) = abi.decode(data, (address, uint32, bool, bytes));
+        withdrawTo = _withdrawTo;
+        withdrawPeriod = _withdrawPeriod;
+        toBentoBox = _toBentoBox;
+        taskData = _taskData;
         emit TaskUpdate();
     }
 
     ///@notice Cancel task, send back funds and the Furo NFT
     ///@param data abi encoded address to send the Furo NFT to
-    function cancelTask(bytes calldata data) external override {
-        address withdrawTo = abi.decode(data, (address));
+    function cancelTask(bytes calldata data) external override onlyOwner {
+        address to = abi.decode(data, (address));
         emit TaskCancel();
     }
 
@@ -106,10 +88,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     ///@notice Function called by Gelato keepers if checkTask return true, execute an automated time withdraw
     ///@param execPayload TaskId and sharesToWitdraw from the Furo stream/vesting
     function executeTask(bytes calldata execPayload) external override {
-        (uint256 taskId, uint256 sharesToWithdraw) = abi.decode(
-            execPayload,
-            (uint256, uint256)
-        );
+        uint256 sharesToWithdraw = abi.decode(execPayload, (uint256));
 
         //check if not too early
         if (
