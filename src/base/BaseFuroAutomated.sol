@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.16;
 
-import "./interfaces/IBentoBoxMinimal.sol";
-import {Clone} from "./clonesWithImmutableArgs/Clone.sol";
+import {Clone} from "./../clonesWithImmutableArgs/Clone.sol";
+import {IBentoBoxMinimal} from "./../interfaces/IBentoBoxMinimal.sol";
+import {ITasker} from "./../interfaces/ITasker.sol";
 
 abstract contract BaseFuroAutomated is Clone {
     function bentoBox() internal pure returns (IBentoBoxMinimal) {
         return IBentoBoxMinimal(_getArgAddress(0));
     }
 
-    function init() external virtual;
+    function init(bytes calldata data) external virtual;
 
-    function updateTask() external virtual;
+    function updateTask(bytes calldata data) external virtual;
 
-    function cancelTask() external virtual;
+    function cancelTask(bytes calldata data) external virtual;
 
     function checkTask()
         external
