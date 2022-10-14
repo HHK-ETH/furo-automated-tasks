@@ -70,6 +70,13 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     ///@param data abi encoded address to send the Furo NFT to
     function cancelTask(bytes calldata data) external override onlyOwner {
         address to = abi.decode(data, (address));
+
+        if (vesting()) {
+            FuroVesting(furo()).safeTransferFrom(address(this), to, id());
+        } else {
+            FuroStream(furo()).safeTransferFrom(address(this), to, id());
+        }
+        to.call{value: address(this).balance}("");
         emit TaskCancel();
     }
 
