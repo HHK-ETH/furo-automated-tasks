@@ -2,13 +2,14 @@
 pragma solidity ^0.8.16;
 
 import "./interfaces/IBentoBoxMinimal.sol";
+import {Clone} from "./clonesWithImmutableArgs/Clone.sol";
 
-abstract contract BaseFuroAutomated {
-    IBentoBoxMinimal immutable bentoBox;
-
-    constructor(address _bentoBox) {
-        bentoBox = IBentoBoxMinimal(_bentoBox);
+abstract contract BaseFuroAutomated is Clone {
+    function bentoBox() internal pure returns (IBentoBoxMinimal) {
+        return IBentoBoxMinimal(_getArgAddress(0));
     }
+
+    function init() external virtual;
 
     function updateTask() external virtual;
 
@@ -40,9 +41,9 @@ abstract contract BaseFuroAutomated {
         bool toBentoBox
     ) internal {
         if (toBentoBox) {
-            bentoBox.transfer(token, from, to, shares);
+            bentoBox().transfer(token, from, to, shares);
         } else {
-            bentoBox.withdraw(token, from, to, 0, shares);
+            bentoBox().withdraw(token, from, to, 0, shares);
         }
     }
 }

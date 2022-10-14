@@ -6,25 +6,19 @@ import "./interfaces/IGelatoOps.sol";
 import "./furo/FuroStream.sol";
 import "./furo/FuroVesting.sol";
 import {BaseFuroAutomated} from "./BaseFuroAutomated.sol";
+import {ClonesWithImmutableArgs} from "./clonesWithImmutableArgs/ClonesWithImmutableArgs.sol";
 
 abstract contract BaseFuroAutomatedFactory {
-    error NotOwner();
-
+    using ClonesWithImmutableArgs for address;
     /// -----------------------------------------------------------------------
     /// Immutable variables
     /// -----------------------------------------------------------------------
 
-    IBentoBoxMinimal public immutable bentoBox;
+    IBentoBoxMinimal internal immutable bentoBox;
     FuroStream internal immutable furoStream;
     FuroVesting internal immutable furoVesting;
     IGelatoOps internal immutable gelatoOps;
-
-    /// -----------------------------------------------------------------------
-    /// mutable variables
-    /// -----------------------------------------------------------------------
-
-    address public owner;
-    address public implementation;
+    BaseFuroAutomated public immutable implementation;
 
     /// -----------------------------------------------------------------------
     /// Constructor
@@ -33,42 +27,32 @@ abstract contract BaseFuroAutomatedFactory {
     ///@param _bentoBox Address of the BentoBox contract
     ///@param _furoStream Address of the furoStream contract
     ///@param _furoVesting Address of the furoVesting contract
+    ///@param _gelatoOps Address of the gelato OPS to create new tasks
+    ///@param _implementation Address of the implementation to clone from
     constructor(
         address _bentoBox,
         address _furoStream,
         address _furoVesting,
-        address _gelatoOps
+        address _gelatoOps,
+        address _implementation
     ) {
         bentoBox = IBentoBoxMinimal(_bentoBox);
         furoStream = FuroStream(_furoStream);
         furoVesting = FuroVesting(_furoVesting);
         gelatoOps = IGelatoOps(_gelatoOps);
+        implementation = BaseFuroAutomated(_implementation);
     }
 
     /// -----------------------------------------------------------------------
-    /// Functions and modifiers
+    /// Functions
     /// -----------------------------------------------------------------------
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) {
-            revert NotOwner();
-        }
-        _;
-    }
-
-    ///@notice Set the implementation to clone
-    function setImplementation(address newImplementation) external onlyOwner {
-        implementation = newImplementation;
-    }
-
-    ///@notice Set the owner of the factory
-    function setOwner(address newOwner) external onlyOwner {
-        owner = newOwner;
-    }
 
     ///@notice Deploy a new automated furoAutomated contract clone
-    function createFuroAutomated(bytes calldata data) external {
-        BaseFuroAutomated furoAutomated = _createFuroAutomated(data);
+    function createFuroAutomated(bytes calldata data)
+        external
+        returns (BaseFuroAutomated furoAutomated)
+    {
+        furoAutomated = _createFuroAutomated(data);
 
         gelatoOps.createTask(
             address(furoAutomated),
@@ -82,5 +66,5 @@ abstract contract BaseFuroAutomatedFactory {
     function _createFuroAutomated(bytes calldata data)
         internal
         virtual
-        returns (BaseFuroAutomated);
+        returns (BaseFuroAutomated furoAutomated);
 }
