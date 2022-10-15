@@ -7,6 +7,12 @@ import {ITasker} from "./../interfaces/ITasker.sol";
 
 abstract contract BaseFuroAutomated is Clone {
     /// -----------------------------------------------------------------------
+    /// Events
+    /// -----------------------------------------------------------------------
+
+    event Funded(uint256 amount);
+
+    /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
 
@@ -70,6 +76,16 @@ abstract contract BaseFuroAutomated is Clone {
         returns (bool canExec, bytes memory execPayload);
 
     function executeTask(bytes calldata execPayload) external virtual;
+
+    //Should be used over a transfer
+    function fund() external payable {
+        emit Funded(msg.value);
+    }
+
+    //In case user wants to refill the contract without frontend/directly
+    receive() external payable {
+        emit Funded(msg.value);
+    }
 
     /// -----------------------------------------------------------------------
     /// Internal functions
