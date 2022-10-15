@@ -16,9 +16,14 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// Events
     /// -----------------------------------------------------------------------
 
-    event TaskUpdate();
-    event TaskCancel();
-    event TaskExecute(uint256 timestamp);
+    event TaskUpdate(
+        address withdrawTo,
+        uint32 withdrawPeriod,
+        bool toBentoBox,
+        bytes taskData
+    );
+    event TaskCancel(address to);
+    event TaskExecute(uint256 amount);
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
@@ -63,7 +68,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         withdrawPeriod = _withdrawPeriod;
         toBentoBox = _toBentoBox;
         taskData = _taskData;
-        emit TaskUpdate();
+        emit TaskUpdate(_withdrawTo, _withdrawPeriod, _toBentoBox, _taskData);
     }
 
     ///@notice Cancel task, send back funds and the Furo NFT
@@ -77,7 +82,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
             FuroStream(furo()).safeTransferFrom(address(this), to, id());
         }
         to.call{value: address(this).balance}("");
-        emit TaskCancel();
+        emit TaskCancel(to);
     }
 
     /// -----------------------------------------------------------------------
@@ -128,6 +133,6 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         }
 
         lastWithdraw = uint128(block.timestamp);
-        emit TaskExecute(block.timestamp);
+        emit TaskExecute(sharesToWithdraw);
     }
 }
