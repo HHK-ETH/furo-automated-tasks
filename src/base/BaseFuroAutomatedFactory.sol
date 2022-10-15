@@ -27,7 +27,7 @@ abstract contract BaseFuroAutomatedFactory {
     constructor(
         address _bentoBox,
         address _gelatoOps,
-        address _implementation
+        address payable _implementation
     ) {
         bentoBox = IBentoBoxMinimal(_bentoBox);
         gelatoOps = IGelatoOps(_gelatoOps);
@@ -41,9 +41,14 @@ abstract contract BaseFuroAutomatedFactory {
     ///@notice Deploy a new automated furoAutomated contract clone
     function createFuroAutomated(bytes calldata data)
         external
+        payable
         returns (BaseFuroAutomated furoAutomated)
     {
         furoAutomated = _createFuroAutomated(data);
+
+        if (msg.value > 0) {
+            furoAutomated.fund{value: msg.value}();
+        }
 
         gelatoOps.createTask(
             address(furoAutomated),

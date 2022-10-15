@@ -8,6 +8,17 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
     using ClonesWithImmutableArgs for address;
 
     /// -----------------------------------------------------------------------
+    /// Events
+    /// -----------------------------------------------------------------------
+
+    event CreateFuroAutomated(
+        BaseFuroAutomated indexed clone,
+        address furo,
+        address token,
+        uint256 id
+    );
+
+    /// -----------------------------------------------------------------------
     /// Immutable variables
     /// -----------------------------------------------------------------------
     FuroStream internal immutable furoStream;
@@ -27,7 +38,7 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
         address _furoStream,
         address _furoVesting,
         address _gelatoOps,
-        address _implementation
+        address payable _implementation
     ) BaseFuroAutomatedFactory(_bentoBox, _gelatoOps, _implementation) {
         furoStream = FuroStream(_furoStream);
         furoVesting = FuroVesting(_furoVesting);
@@ -56,12 +67,13 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
                 (uint256, address, address, uint32, bool, bool, bytes)
             );
 
+        address furo = vesting ? address(furoVesting) : address(furoStream);
         furoAutomated = FuroAutomatedTime(
             address(implementation).clone(
                 abi.encodePacked(
                     address(bentoBox),
                     address(this),
-                    vesting ? address(furoVesting) : address(furoStream),
+                    furo,
                     msg.sender,
                     token,
                     vesting,
@@ -79,6 +91,8 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
         } else {
             furoStream.safeTransferFrom(msg.sender, address(furoAutomated), id);
         }
+
+        emit CreateFuroAutomated(furoAutomated, furo, token, id); //trigger creation event before update so a subgraph can index update event easily
 
         furoAutomated.updateTask(
             abi.encodePacked(withdrawTo, withdrawPeriod, toBentoBox, taskData)
