@@ -2,7 +2,7 @@
 pragma solidity ^0.8.16;
 
 import {IBentoBoxMinimal} from "./../interfaces/IBentoBoxMinimal.sol";
-import {IGelatoOps} from "./../interfaces/IGelatoOps.sol";
+import {IOps} from "./../interfaces/IOps.sol";
 import {FuroStream} from "./../furo/FuroStream.sol";
 import {FuroVesting} from "./../furo/FuroVesting.sol";
 import {BaseFuroAutomated} from "./BaseFuroAutomated.sol";
@@ -14,7 +14,7 @@ abstract contract BaseFuroAutomatedFactory {
     /// -----------------------------------------------------------------------
 
     IBentoBoxMinimal internal immutable bentoBox;
-    IGelatoOps internal immutable gelatoOps;
+    IOps public immutable ops;
     BaseFuroAutomated public immutable implementation;
 
     /// -----------------------------------------------------------------------
@@ -22,15 +22,15 @@ abstract contract BaseFuroAutomatedFactory {
     /// -----------------------------------------------------------------------
 
     ///@param _bentoBox Address of the BentoBox contract
-    ///@param _gelatoOps Address of the gelato OPS to create new tasks
+    ///@param _ops Address of the gelato OPS to create new tasks
     ///@param _implementation Address of the implementation to clone from
     constructor(
         address _bentoBox,
-        address _gelatoOps,
+        address _ops,
         address payable _implementation
     ) {
         bentoBox = IBentoBoxMinimal(_bentoBox);
-        gelatoOps = IGelatoOps(_gelatoOps);
+        ops = IOps(_ops);
         implementation = BaseFuroAutomated(_implementation);
     }
 
@@ -50,7 +50,7 @@ abstract contract BaseFuroAutomatedFactory {
             furoAutomated.fund{value: msg.value}();
         }
 
-        gelatoOps.createTask(
+        ops.createTask(
             address(furoAutomated),
             furoAutomated.executeTask.selector,
             address(furoAutomated),

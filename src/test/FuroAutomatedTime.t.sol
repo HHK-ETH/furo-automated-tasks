@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.16;
 
 import "forge-std/Test.sol";
 
@@ -9,14 +9,18 @@ import {FuroStream, IFuroStream} from "./../furo/FuroStream.sol";
 import {FuroStreamRouter} from "./../furo/FuroStreamRouter.sol";
 import {FuroVesting, IFuroVesting} from "./../furo/FuroVesting.sol";
 import {FuroVestingRouter} from "./../furo/FuroVestingRouter.sol";
+import {FuroAutomatedTime} from "./../FuroAutomatedTime.sol";
+import {FuroAutomatedTimeFactory} from "./../FuroAutomatedTimeFactory.sol";
 
-contract TestFuroAutomatedTimeWithdraw is Test {
+contract TestFuroAutomatedTime is Test {
     ERC20Mock WETH;
     BentoBoxV1 bentobox;
     FuroStream furoStream;
     FuroStreamRouter furoStreamRouter;
     FuroVesting furoVesting;
     FuroVestingRouter furoVestingRouter;
+    FuroAutomatedTime implementation;
+    FuroAutomatedTimeFactory factory;
 
     ///@notice Deploy contracts needed for each tests
     function setUp() public {
@@ -45,6 +49,16 @@ contract TestFuroAutomatedTimeWithdraw is Test {
         vm.deal(address(this), 100 * 1e18);
         address(WETH).call{value: 20 * 1e18}("");
 
+        //deploy implementation and factory
+        implementation = new FuroAutomatedTime();
+        factory = new FuroAutomatedTimeFactory(
+            address(bentobox),
+            address(furoStream),
+            address(furoVesting),
+            address(0), //replace with mock gelato ops
+            payable(implementation)
+        );
+
         //Create a test stream and approve it
         WETH.approve(address(bentobox), 10 * 1e18);
         bentobox.setMasterContractApproval(
@@ -64,6 +78,7 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             false,
             0
         );
+        furoStream.approve(address(factory), 1000);
 
         //Create a test vesting and approve it
         WETH.approve(address(bentobox), 10 * 1e18);
@@ -89,5 +104,19 @@ contract TestFuroAutomatedTimeWithdraw is Test {
             }),
             0
         );
+        furoVesting.approve(address(factory), 0);
+    }
+
+    function testCreateAutomatedTime_withStream() public {
+        bytes memory data = abi.encodePacked(
+            uint256(1000),
+            address(WETH),
+            address(this),
+            uint256(3600),
+            false,
+            false,
+            bytes("")
+        );
+        factory.createFuroAutomated(data);
     }
 }

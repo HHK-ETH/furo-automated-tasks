@@ -30,11 +30,11 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// -----------------------------------------------------------------------
 
     function vesting() public pure returns (bool) {
-        return _getArgBool(100);
+        return _getArgBool(140);
     }
 
     function id() public pure returns (uint256) {
-        return _getArgUint256(101);
+        return _getArgUint256(141);
     }
 
     /// -----------------------------------------------------------------------
@@ -99,7 +99,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
 
     ///@notice Function called by Gelato keepers if checkTask return true, execute an automated time withdraw
     ///@param execPayload TaskId and sharesToWitdraw from the Furo stream/vesting
-    function executeTask(bytes calldata execPayload) external override {
+    function _executeTask(bytes calldata execPayload) internal override {
         uint256 sharesToWithdraw = abi.decode(execPayload, (uint256));
 
         //check if not too early

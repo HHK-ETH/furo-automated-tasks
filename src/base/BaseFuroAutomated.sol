@@ -4,8 +4,11 @@ pragma solidity ^0.8.16;
 import {Clone} from "./../clonesWithImmutableArgs/Clone.sol";
 import {IBentoBoxMinimal} from "./../interfaces/IBentoBoxMinimal.sol";
 import {ITasker} from "./../interfaces/ITasker.sol";
+import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
+import {IOps} from "./../interfaces/IOps.sol";
+import {SafeERC20, IERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
-abstract contract BaseFuroAutomated is Clone {
+abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// -----------------------------------------------------------------------
     /// Events
     /// -----------------------------------------------------------------------
@@ -31,16 +34,24 @@ abstract contract BaseFuroAutomated is Clone {
         return _getArgAddress(20);
     }
 
-    function furo() public pure returns (address) {
+    function ops() public pure returns (address) {
         return _getArgAddress(40);
     }
 
-    function owner() public pure returns (address) {
+    function gelato() public pure returns (address) {
         return _getArgAddress(60);
     }
 
-    function token() public pure returns (address) {
+    function furo() public pure returns (address) {
         return _getArgAddress(80);
+    }
+
+    function owner() public pure returns (address) {
+        return _getArgAddress(100);
+    }
+
+    function token() public pure returns (address) {
+        return _getArgAddress(120);
     }
 
     /// -----------------------------------------------------------------------
@@ -61,6 +72,11 @@ abstract contract BaseFuroAutomated is Clone {
         _;
     }
 
+    modifier onlyOps() {
+        require(msg.sender == ops(), "OpsReady: onlyOps");
+        _;
+    }
+
     /// -----------------------------------------------------------------------
     /// external functions
     /// -----------------------------------------------------------------------
@@ -75,7 +91,15 @@ abstract contract BaseFuroAutomated is Clone {
         virtual
         returns (bool canExec, bytes memory execPayload);
 
-    function executeTask(bytes calldata execPayload) external virtual;
+    function executeTask(bytes calldata execPayload) external onlyOps {
+        _executeTask(execPayload);
+
+        //pay gelato ops
+        (uint256 fee, address feeToken) = IOps(ops()).getFeeDetails();
+        _transfer(fee, feeToken);
+    }
+
+    function _executeTask(bytes calldata execPayload) internal virtual;
 
     //Should be used over a transfer
     function fund() external payable {
@@ -108,6 +132,16 @@ abstract contract BaseFuroAutomated is Clone {
             bentoBox().transfer(tokenAddress, from, to, shares);
         } else {
             bentoBox().withdraw(tokenAddress, from, to, 0, shares);
+        }
+    }
+
+    ///@notice Gelato compatible transfer function to pay fees
+    function _transfer(uint256 _amount, address _paymentToken) internal {
+        if (_paymentToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            (bool success, ) = gelato().call{value: _amount}("");
+            require(success, "_transfer: ETH transfer failed");
+        } else {
+            SafeERC20.safeTransfer(IERC20(_paymentToken), gelato(), _amount);
         }
     }
 }

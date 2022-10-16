@@ -73,6 +73,8 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
                 abi.encodePacked(
                     address(bentoBox),
                     address(this),
+                    address(ops),
+                    ops.gelato(),
                     furo,
                     msg.sender,
                     token,

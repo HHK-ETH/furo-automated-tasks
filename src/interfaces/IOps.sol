@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-interface IGelatoOps {
-    function fee() external returns (uint256);
+interface IOps {
+    function gelato() external view returns (address payable);
 
-    function feeToken() external returns (address);
+    function getFeeDetails() external view returns (uint256, address);
 
     function createTask(
         address _execAddress,
