@@ -19,7 +19,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// Errors
     /// -----------------------------------------------------------------------
 
-    error NotOwnerNorFactory();
+    error NotFactory();
     error NotOwner();
 
     /// -----------------------------------------------------------------------
@@ -58,9 +58,9 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// modifiers
     /// -----------------------------------------------------------------------
 
-    modifier onlyOwnerOrFactory() {
-        if (msg.sender != owner() && msg.sender != factory()) {
-            revert NotOwnerNorFactory();
+    modifier onlyFactory() {
+        if (msg.sender != factory()) {
+            revert NotFactory();
         }
         _;
     }
@@ -80,6 +80,8 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// -----------------------------------------------------------------------
     /// external functions
     /// -----------------------------------------------------------------------
+
+    function init(bytes calldata data) external virtual;
 
     function updateTask(bytes calldata data) external virtual;
 

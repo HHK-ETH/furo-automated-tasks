@@ -51,13 +51,21 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// State change functions
     /// -----------------------------------------------------------------------
 
+    ///@notice Called on contract creation by factory to init variables
+    function init(bytes calldata data) external override onlyFactory {
+        _updateTask(data);
+        lastWithdraw = uint128(block.timestamp);
+    }
+
     ///@notice Update contract variables
     ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
-    function updateTask(bytes calldata data)
-        external
-        override
-        onlyOwnerOrFactory
-    {
+    function updateTask(bytes calldata data) external override onlyOwner {
+        _updateTask(data);
+    }
+
+    ///@notice Update function logic
+    ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
+    function _updateTask(bytes calldata data) internal {
         (
             address _withdrawTo,
             uint32 _withdrawPeriod,

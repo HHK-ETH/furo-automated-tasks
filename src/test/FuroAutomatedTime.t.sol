@@ -126,6 +126,45 @@ contract TestFuroAutomatedTime is Test {
             false,
             bytes("")
         );
-        factory.createFuroAutomated(data);
+        FuroAutomatedTime furoAutomatedTime = FuroAutomatedTime(
+            payable(factory.createFuroAutomated(data))
+        );
+        assertEq(furoAutomatedTime.id(), uint256(1000));
+        assertEq(furoAutomatedTime.vesting(), false);
+        assertEq(furoAutomatedTime.token(), address(WETH));
+        assertEq(furoAutomatedTime.owner(), address(this));
+        assertEq(furoAutomatedTime.furo(), address(furoStream));
+        assertEq(furoAutomatedTime.ops(), address(ops));
+        assertEq(furoAutomatedTime.withdrawTo(), address(this));
+        assertEq(furoAutomatedTime.withdrawPeriod(), uint32(3600));
+        assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
+        assertEq(furoAutomatedTime.toBentoBox(), false);
+        assertEq(furoAutomatedTime.taskData(), bytes(""));
+    }
+
+    function testCreateAutomatedTime_withVesting() public {
+        bytes memory data = abi.encode(
+            uint256(1),
+            address(WETH),
+            address(this),
+            uint32(3600),
+            true,
+            false,
+            bytes("")
+        );
+        FuroAutomatedTime furoAutomatedTime = FuroAutomatedTime(
+            payable(factory.createFuroAutomated(data))
+        );
+        assertEq(furoAutomatedTime.id(), uint256(1));
+        assertEq(furoAutomatedTime.vesting(), true);
+        assertEq(furoAutomatedTime.token(), address(WETH));
+        assertEq(furoAutomatedTime.owner(), address(this));
+        assertEq(furoAutomatedTime.furo(), address(furoVesting));
+        assertEq(furoAutomatedTime.ops(), address(ops));
+        assertEq(furoAutomatedTime.withdrawTo(), address(this));
+        assertEq(furoAutomatedTime.withdrawPeriod(), uint32(3600));
+        assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
+        assertEq(furoAutomatedTime.toBentoBox(), false);
+        assertEq(furoAutomatedTime.taskData(), bytes(""));
     }
 }
