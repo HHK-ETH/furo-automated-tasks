@@ -97,7 +97,7 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
         emit CreateFuroAutomated(furoAutomated, furo, token, id); //trigger creation event before update so a subgraph can index update event easily
 
         furoAutomated.updateTask(
-            abi.encodePacked(withdrawTo, withdrawPeriod, toBentoBox, taskData)
+            abi.encode(withdrawTo, withdrawPeriod, toBentoBox, taskData)
         );
     }
 }

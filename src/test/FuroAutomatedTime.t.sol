@@ -113,15 +113,15 @@ contract TestFuroAutomatedTime is Test {
             }),
             0
         );
-        furoVesting.approve(address(factory), 0);
+        furoVesting.approve(address(factory), 1);
     }
 
     function testCreateAutomatedTime_withStream() public {
-        bytes memory data = abi.encodePacked(
+        bytes memory data = abi.encode(
             uint256(1000),
             address(WETH),
             address(this),
-            uint256(3600),
+            uint32(3600),
             false,
             false,
             bytes("")

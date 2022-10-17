@@ -31,7 +31,9 @@ contract GelatoMock is IOps {
         bytes4 _execSelector,
         address _resolverAddress,
         bytes calldata _resolverData
-    ) external returns (bytes32 task) {}
+    ) external returns (bytes32 task) {
+        return "";
+    }
 
     function createTaskNoPrepayment(
         address _execAddress,
@@ -39,5 +41,7 @@ contract GelatoMock is IOps {
         address _resolverAddress,
         bytes calldata _resolverData,
         address _feeToken
-    ) external returns (bytes32 task) {}
+    ) external returns (bytes32 task) {
+        return "";
+    }
 }
