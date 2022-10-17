@@ -11,6 +11,7 @@ import {FuroVesting, IFuroVesting} from "./../furo/FuroVesting.sol";
 import {FuroVestingRouter} from "./../furo/FuroVestingRouter.sol";
 import {FuroAutomatedTime} from "./../FuroAutomatedTime.sol";
 import {FuroAutomatedTimeFactory} from "./../FuroAutomatedTimeFactory.sol";
+import {GelatoMock} from "./../mock/GelatoMock.sol";
 
 contract TestFuroAutomatedTime is Test {
     ERC20Mock WETH;
@@ -21,6 +22,7 @@ contract TestFuroAutomatedTime is Test {
     FuroVestingRouter furoVestingRouter;
     FuroAutomatedTime implementation;
     FuroAutomatedTimeFactory factory;
+    GelatoMock ops;
 
     ///@notice Deploy contracts needed for each tests
     function setUp() public {
@@ -45,9 +47,12 @@ contract TestFuroAutomatedTime is Test {
         );
         bentobox.whitelistMasterContract((address(furoVestingRouter)), true);
 
-        //Mint ETH & WETH tokens
-        vm.deal(address(this), 100 * 1e18);
-        address(WETH).call{value: 20 * 1e18}("");
+        //deploy gelato ops
+        ops = new GelatoMock(
+            payable(address(1)),
+            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+            1e16 //0.01 ETH
+        );
 
         //deploy implementation and factory
         implementation = new FuroAutomatedTime();
@@ -55,9 +60,13 @@ contract TestFuroAutomatedTime is Test {
             address(bentobox),
             address(furoStream),
             address(furoVesting),
-            address(0), //replace with mock gelato ops
+            address(ops), //replace with mock gelato ops
             payable(implementation)
         );
+
+        //Mint ETH & WETH tokens
+        vm.deal(address(this), 100 * 1e18);
+        address(WETH).call{value: 20 * 1e18}("");
 
         //Create a test stream and approve it
         WETH.approve(address(bentobox), 10 * 1e18);
