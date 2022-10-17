@@ -52,7 +52,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// -----------------------------------------------------------------------
 
     ///@notice Called on contract creation by factory to init variables
-    function init(bytes calldata data) external override onlyFactory {
+    function _init(bytes calldata data) internal override {
         _updateTask(data);
         lastWithdraw = uint128(block.timestamp);
     }

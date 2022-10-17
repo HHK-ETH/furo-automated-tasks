@@ -44,4 +44,8 @@ contract GelatoMock is IOps {
     ) external returns (bytes32 task) {
         return "";
     }
+
+    function cancelTask(bytes32 _taskId) external {
+        return;
+    }
 }

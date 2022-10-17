@@ -9,11 +9,11 @@ import {FuroStream, IFuroStream} from "./../furo/FuroStream.sol";
 import {FuroStreamRouter} from "./../furo/FuroStreamRouter.sol";
 import {FuroVesting, IFuroVesting} from "./../furo/FuroVesting.sol";
 import {FuroVestingRouter} from "./../furo/FuroVestingRouter.sol";
-import {FuroAutomatedTime} from "./../FuroAutomatedTime.sol";
+import {FuroAutomatedTime, BaseFuroAutomated, ERC721TokenReceiver} from "./../FuroAutomatedTime.sol";
 import {FuroAutomatedTimeFactory} from "./../FuroAutomatedTimeFactory.sol";
 import {GelatoMock} from "./../mock/GelatoMock.sol";
 
-contract TestFuroAutomatedTime is Test {
+contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     ERC20Mock WETH;
     BentoBoxV1 bentobox;
     FuroStream furoStream;
@@ -116,7 +116,11 @@ contract TestFuroAutomatedTime is Test {
         furoVesting.approve(address(factory), 1);
     }
 
-    function testCreateAutomatedTime_withStream() public {
+    ///@notice Helper function to easily create Furo Automated Time clone
+    function _createBasicFuroAutomatedTimeStream()
+        internal
+        returns (FuroAutomatedTime furoAutomatedTime)
+    {
         bytes memory data = abi.encode(
             uint256(1000),
             address(WETH),
@@ -126,9 +130,32 @@ contract TestFuroAutomatedTime is Test {
             false,
             bytes("")
         );
-        FuroAutomatedTime furoAutomatedTime = FuroAutomatedTime(
+        furoAutomatedTime = FuroAutomatedTime(
             payable(factory.createFuroAutomated(data))
         );
+    }
+
+    ///@notice Helper function to easily create Furo Automated Time clone
+    function _createBasicFuroAutomatedTimeVesting()
+        internal
+        returns (FuroAutomatedTime furoAutomatedTime)
+    {
+        bytes memory data = abi.encode(
+            uint256(1),
+            address(WETH),
+            address(this),
+            uint32(3600),
+            true,
+            false,
+            bytes("")
+        );
+        furoAutomatedTime = FuroAutomatedTime(
+            payable(factory.createFuroAutomated(data))
+        );
+    }
+
+    function testCreateAutomatedTime_withStream() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
         assertEq(furoAutomatedTime.id(), uint256(1000));
         assertEq(furoAutomatedTime.vesting(), false);
         assertEq(furoAutomatedTime.token(), address(WETH));
@@ -143,18 +170,7 @@ contract TestFuroAutomatedTime is Test {
     }
 
     function testCreateAutomatedTime_withVesting() public {
-        bytes memory data = abi.encode(
-            uint256(1),
-            address(WETH),
-            address(this),
-            uint32(3600),
-            true,
-            false,
-            bytes("")
-        );
-        FuroAutomatedTime furoAutomatedTime = FuroAutomatedTime(
-            payable(factory.createFuroAutomated(data))
-        );
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeVesting();
         assertEq(furoAutomatedTime.id(), uint256(1));
         assertEq(furoAutomatedTime.vesting(), true);
         assertEq(furoAutomatedTime.token(), address(WETH));
@@ -166,5 +182,60 @@ contract TestFuroAutomatedTime is Test {
         assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
         assertEq(furoAutomatedTime.toBentoBox(), false);
         assertEq(furoAutomatedTime.taskData(), bytes(""));
+    }
+
+    function testUpdateAutomatedTime() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        address withdrawTo = address(100);
+        uint32 withdrawPeriod = 9999;
+        bool toBentoBox = true;
+        bytes memory taskData = "";
+        bytes memory data = abi.encode(
+            withdrawTo,
+            withdrawPeriod,
+            toBentoBox,
+            taskData
+        );
+        furoAutomatedTime.updateTask(data);
+        assertEq(furoAutomatedTime.withdrawTo(), withdrawTo);
+        assertEq(furoAutomatedTime.withdrawPeriod(), withdrawPeriod);
+        assertEq(furoAutomatedTime.toBentoBox(), toBentoBox);
+        assertEq(furoAutomatedTime.taskData(), taskData);
+    }
+
+    function testCannotUpdateAutomatedTime_ifNotOwner() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        vm.prank(address(2222));
+        address withdrawTo = address(100);
+        uint32 withdrawPeriod = 9999;
+        bool toBentoBox = true;
+        bytes memory taskData = "";
+        bytes memory data = abi.encode(
+            withdrawTo,
+            withdrawPeriod,
+            toBentoBox,
+            taskData
+        );
+        vm.expectRevert(BaseFuroAutomated.NotOwner.selector);
+        furoAutomatedTime.updateTask(data);
+    }
+
+    function testCancelAutomatedTime() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        furoAutomatedTime.cancelTask(abi.encode(address(this)));
+        assertEq(furoStream.ownerOf(furoAutomatedTime.id()), address(this));
+    }
+
+    function testCannotCancelAutomatedTime_ifNotOwner() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        vm.prank(address(2222));
+        vm.expectRevert(BaseFuroAutomated.NotOwner.selector);
+        furoAutomatedTime.cancelTask(abi.encode(address(this)));
+    }
+
+    function testCannotInit_ifNotFactory() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        vm.expectRevert(BaseFuroAutomated.NotFactory.selector);
+        furoAutomatedTime.init("");
     }
 }

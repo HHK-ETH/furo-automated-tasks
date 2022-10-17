@@ -55,6 +55,12 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     }
 
     /// -----------------------------------------------------------------------
+    /// Mutable variables
+    /// -----------------------------------------------------------------------
+
+    bytes32 public taskId;
+
+    /// -----------------------------------------------------------------------
     /// modifiers
     /// -----------------------------------------------------------------------
 
@@ -81,7 +87,20 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// external functions
     /// -----------------------------------------------------------------------
 
-    function init(bytes calldata data) external virtual;
+    ///@notice Called on contract creation by factory to init variables
+    function init(bytes calldata data) external onlyFactory {
+        _init(data);
+
+        taskId = IOps(ops()).createTaskNoPrepayment(
+            address(this),
+            this.executeTask.selector,
+            address(this),
+            abi.encodeWithSelector(this.checkTask.selector),
+            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE //native token
+        );
+    }
+
+    function _init(bytes calldata data) internal virtual;
 
     function updateTask(bytes calldata data) external virtual;
 

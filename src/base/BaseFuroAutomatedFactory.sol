@@ -49,14 +49,6 @@ abstract contract BaseFuroAutomatedFactory {
         if (msg.value > 0) {
             furoAutomated.fund{value: msg.value}();
         }
-
-        ops.createTaskNoPrepayment(
-            address(furoAutomated),
-            furoAutomated.executeTask.selector,
-            address(furoAutomated),
-            abi.encodeWithSelector(furoAutomated.checkTask.selector),
-            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE //native token
-        );
     }
 
     ///@notice Contract creation logic
