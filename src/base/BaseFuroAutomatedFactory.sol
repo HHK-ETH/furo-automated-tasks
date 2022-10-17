@@ -50,11 +50,12 @@ abstract contract BaseFuroAutomatedFactory {
             furoAutomated.fund{value: msg.value}();
         }
 
-        ops.createTask(
+        ops.createTaskNoPrepayment(
             address(furoAutomated),
             furoAutomated.executeTask.selector,
             address(furoAutomated),
-            abi.encodeWithSelector(furoAutomated.checkTask.selector)
+            abi.encodeWithSelector(furoAutomated.checkTask.selector),
+            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE //native token
         );
     }
 

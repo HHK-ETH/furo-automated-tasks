@@ -4,26 +4,26 @@ pragma solidity ^0.8.16;
 import {IOps} from "./../interfaces/IOps.sol";
 
 contract GelatoMock is IOps {
-    address payable internal _gelato;
-    address internal _feeToken;
-    uint256 internal _fee;
+    address payable internal gelatoAddr;
+    address internal feeToken;
+    uint256 internal fee;
 
     constructor(
-        address payable _newGelato,
-        address _newFeeToken,
-        uint256 _newFee
+        address payable _gelato,
+        address _feeToken,
+        uint256 _fee
     ) {
-        _gelato = _newGelato;
-        _feeToken = _newFeeToken;
-        _fee = _newFee;
+        gelatoAddr = _gelato;
+        feeToken = _feeToken;
+        fee = _fee;
     }
 
     function gelato() external view returns (address payable) {
-        return _gelato;
+        return gelatoAddr;
     }
 
     function getFeeDetails() external view returns (uint256, address) {
-        return (_fee, _feeToken);
+        return (fee, feeToken);
     }
 
     function createTask(
@@ -31,5 +31,13 @@ contract GelatoMock is IOps {
         bytes4 _execSelector,
         address _resolverAddress,
         bytes calldata _resolverData
+    ) external returns (bytes32 task) {}
+
+    function createTaskNoPrepayment(
+        address _execAddress,
+        bytes4 _execSelector,
+        address _resolverAddress,
+        bytes calldata _resolverData,
+        address _feeToken
     ) external returns (bytes32 task) {}
 }
