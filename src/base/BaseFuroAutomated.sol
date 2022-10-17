@@ -102,9 +102,19 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     function _init(bytes calldata data) internal virtual;
 
-    function updateTask(bytes calldata data) external virtual;
+    function updateTask(bytes calldata data) external onlyOwner {
+        _updateTask(data);
+    }
 
-    function cancelTask(bytes calldata data) external virtual;
+    function _updateTask(bytes calldata data) internal virtual;
+
+    function cancelTask(bytes calldata data) external onlyOwner {
+        _cancelTask(data);
+
+        IOps(ops()).cancelTask(taskId);
+    }
+
+    function _cancelTask(bytes calldata data) internal virtual;
 
     function checkTask()
         external

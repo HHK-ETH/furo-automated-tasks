@@ -57,15 +57,9 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         lastWithdraw = uint128(block.timestamp);
     }
 
-    ///@notice Update contract variables
-    ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
-    function updateTask(bytes calldata data) external override onlyOwner {
-        _updateTask(data);
-    }
-
     ///@notice Update function logic
     ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
-    function _updateTask(bytes calldata data) internal {
+    function _updateTask(bytes calldata data) internal override {
         (
             address _withdrawTo,
             uint32 _withdrawPeriod,
@@ -81,7 +75,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
 
     ///@notice Cancel task, send back funds and the Furo NFT
     ///@param data abi encoded address to send the Furo NFT to
-    function cancelTask(bytes calldata data) external override onlyOwner {
+    function _cancelTask(bytes calldata data) internal override {
         address to = abi.decode(data, (address));
 
         if (vesting()) {
