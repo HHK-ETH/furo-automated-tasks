@@ -3,8 +3,9 @@
 This repository containes a bunch of contracts taking advantage of chainlink keepers to execute automatic withdraw/claim on Furo streams and vestings.
 
 To use these contracts, users have to approve and deposit their Furo NFTs on these contracts using the createTask() function (<!> Direct transfer will result in a burn <!>).
+Users must also pay for the fees by calling fund() or sending native tokens to the clone created by the factory.
 
-### 1 - FuroAutomatedTimeWithdraw
+### 1 - FuroAutomatedTime
 
 This contract allows a Furo user to execute automatic withdrawal based on time.
 
