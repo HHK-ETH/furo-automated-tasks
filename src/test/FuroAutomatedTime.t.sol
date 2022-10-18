@@ -238,4 +238,69 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         vm.expectRevert(BaseFuroAutomated.NotFactory.selector);
         furoAutomatedTime.init("");
     }
+
+    function testCheckTask_canExec() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
+        (bool canExec, bytes memory execPayload) = furoAutomatedTime
+            .checkTask();
+        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
+            .streamBalanceOf(furoAutomatedTime.id());
+        assertEq(canExec, true);
+        assertEq(
+            execPayload,
+            abi.encodeWithSelector(
+                BaseFuroAutomated.executeTask.selector,
+                sharesToWithdraw
+            )
+        );
+    }
+
+    function testCheckTask_canNotExec() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        (bool canExec, bytes memory execPayload) = furoAutomatedTime
+            .checkTask();
+        assertEq(canExec, false);
+        assertEq(execPayload, bytes(""));
+    }
+
+    function testExecTask() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        furoAutomatedTime.fund{value: 1 ether}();
+        uint256 balance = WETH.balanceOf(furoAutomatedTime.withdrawTo());
+        vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
+        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
+            .streamBalanceOf(furoAutomatedTime.id());
+        vm.prank(address(ops));
+        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+        assertEq(furoAutomatedTime.lastWithdraw(), block.timestamp);
+        assertEq(
+            WETH.balanceOf(furoAutomatedTime.withdrawTo()),
+            balance +
+                bentobox.toAmount(
+                    IERC20(address(WETH)),
+                    sharesToWithdraw,
+                    false
+                )
+        );
+    }
+
+    function testCannotExecTask_ifNotOps() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        furoAutomatedTime.fund{value: 1 ether}();
+        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
+            .streamBalanceOf(furoAutomatedTime.id());
+        vm.expectRevert(BaseFuroAutomated.NotOps.selector);
+        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+    }
+
+    function testCannotExecTask_ifToEarly() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        furoAutomatedTime.fund{value: 1 ether}();
+        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
+            .streamBalanceOf(furoAutomatedTime.id());
+        vm.prank(address(ops));
+        vm.expectRevert(FuroAutomatedTime.ToEarlyToWithdraw.selector);
+        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+    }
 }

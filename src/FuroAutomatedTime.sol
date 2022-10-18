@@ -97,7 +97,21 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         view
         override
         returns (bool canExec, bytes memory execPayload)
-    {}
+    {
+        if (lastWithdraw + withdrawPeriod < block.timestamp) {
+            uint256 sharesToWithdraw;
+            if (vesting() == false) {
+                (, sharesToWithdraw) = FuroStream(furo()).streamBalanceOf(id());
+            }
+            return (
+                true,
+                abi.encodeWithSelector(
+                    this.executeTask.selector,
+                    sharesToWithdraw
+                )
+            );
+        }
+    }
 
     ///@notice Function called by Gelato keepers if checkTask return true, execute an automated time withdraw
     ///@param execPayload TaskId and sharesToWitdraw from the Furo stream/vesting
@@ -105,14 +119,13 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         uint256 sharesToWithdraw = abi.decode(execPayload, (uint256));
 
         //check if not too early
-        if (
-            lastWithdraw != 0 && lastWithdraw + withdrawPeriod > block.timestamp
-        ) {
+        if (lastWithdraw + withdrawPeriod > block.timestamp) {
             revert ToEarlyToWithdraw();
         }
 
         if (vesting()) {
             FuroVesting(furo()).withdraw(id(), "", true);
+            //can't compute in checkTask as it can increase between check and execution which could result in a very small amount of token burn
             sharesToWithdraw = bentoBox().balanceOf(token(), address(this)); //use less gas than vestBalance()
             _transferToken(
                 token(),

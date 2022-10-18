@@ -21,6 +21,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     error NotFactory();
     error NotOwner();
+    error NotOps();
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
@@ -79,7 +80,9 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     }
 
     modifier onlyOps() {
-        require(msg.sender == ops(), "OpsReady: onlyOps");
+        if (msg.sender != ops()) {
+            revert NotOps();
+        }
         _;
     }
 
