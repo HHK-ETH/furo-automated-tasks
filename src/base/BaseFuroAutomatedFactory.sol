@@ -45,6 +45,8 @@ abstract contract BaseFuroAutomatedFactory {
     /// -----------------------------------------------------------------------
 
     ///@notice Deploy a new automated furoAutomated contract clone
+    ///@param data Abi encoded variables for the clone creation
+    ///@return furoAutomated Address of the clone created
     function createFuroAutomated(bytes calldata data)
         external
         payable
@@ -63,6 +65,9 @@ abstract contract BaseFuroAutomatedFactory {
     }
 
     ///@notice Contract creation logic
+    ///@param data abi encoded variables for the clone creation
+    ///@return furoAutomated Address of the clone created
+    ///@return initData Abi encoded data for initiating the newly created clone
     function _createFuroAutomated(bytes calldata data)
         internal
         virtual

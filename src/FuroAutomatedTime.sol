@@ -51,14 +51,13 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// State change functions
     /// -----------------------------------------------------------------------
 
-    ///@notice Called on contract creation by factory to init variables
+    ///@notice Init contract variables and set lastWithdraw
     function _init(bytes calldata data) internal override {
         _updateTask(data);
         lastWithdraw = uint128(block.timestamp);
     }
 
-    ///@notice Update function logic
-    ///@param data abi encoded (withdrawTo, withdrawPeriod, toBentoBox, taskData)
+    ///@notice Update contract variables
     function _updateTask(bytes calldata data) internal override {
         (
             address _withdrawTo,
@@ -73,8 +72,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         emit TaskUpdate(_withdrawTo, _withdrawPeriod, _toBentoBox, _taskData);
     }
 
-    ///@notice Cancel task, send back funds and the Furo NFT
-    ///@param data abi encoded address to send the Furo NFT to
+    ///@notice Cancel Gelato task, send back Furo NFT and send back native token
     function _cancelTask(bytes calldata data) internal override {
         address to = abi.decode(data, (address));
 
@@ -91,7 +89,9 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// Keepers functions
     /// -----------------------------------------------------------------------
 
-    ///@notice Function checked by Gelato keepers to know if the task need to be executed
+    ///@notice Check if enough time has passed since last withdraw
+    ///@return canExec True if enough time has passed
+    ///@return execPayload The amount of shares to withdraw
     function checkTask()
         external
         view
@@ -113,8 +113,8 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         }
     }
 
-    ///@notice Function called by Gelato keepers if checkTask return true, execute an automated time withdraw
-    ///@param execPayload TaskId and sharesToWitdraw from the Furo stream/vesting
+    ///@notice Function called by Gelato keepers if enough time has passed since last withdraw
+    ///@param execPayload Amount of sharesToWitdraw if it's a stream
     function _executeTask(bytes calldata execPayload) internal override {
         uint256 sharesToWithdraw = abi.decode(execPayload, (uint256));
 

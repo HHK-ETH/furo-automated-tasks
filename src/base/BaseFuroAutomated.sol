@@ -59,7 +59,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// Mutable variables
     /// -----------------------------------------------------------------------
 
-    bytes32 public taskId;
+    bytes32 public taskId; //Gelato OPS taskId hash
 
     /// -----------------------------------------------------------------------
     /// modifiers
@@ -91,6 +91,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// -----------------------------------------------------------------------
 
     ///@notice Called on contract creation by factory to init variables
+    ///@param data Abi encoded data for initiating the newly created clone
     function init(bytes calldata data) external onlyFactory {
         _init(data);
 
@@ -103,28 +104,38 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         );
     }
 
+    ///@notice init() implementation logic
     function _init(bytes calldata data) internal virtual;
 
+    ///@notice Update the contracts data/params
+    ///@param data Abi encoded data neeeded to update the contract
     function updateTask(bytes calldata data) external onlyOwner {
         _updateTask(data);
     }
 
+    ///@notice updateTask() implementation logic
     function _updateTask(bytes calldata data) internal virtual;
 
+    ///@notice Cancel the gelato task and send back Furo NFT and Native tokens
+    ///@param data Abi encoded data neeeded to cancel the task
     function cancelTask(bytes calldata data) external onlyOwner {
         _cancelTask(data);
 
         IOps(ops()).cancelTask(taskId);
     }
 
+    ///@notice cancelTask() implementation logic
     function _cancelTask(bytes calldata data) internal virtual;
 
+    ///@notice Gelato keeper function to check if should execute
     function checkTask()
         external
         view
         virtual
         returns (bool canExec, bytes memory execPayload);
 
+    ///@notice Gelato keeper execute function
+    ///@param execPayload Abi encoded data neeeded to execute
     function executeTask(bytes calldata execPayload) external onlyOps {
         _executeTask(execPayload);
 
@@ -133,14 +144,16 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         _transfer(fee, feeToken);
     }
 
+    ///@notice executeTask() logic implementation
+    ///@param execPayload Abi encoded data neeeded to execute
     function _executeTask(bytes calldata execPayload) internal virtual;
 
-    //Should be used over a transfer
+    ///@notice Fund the contract, should be used over a transfer
     function fund() external payable {
         emit Funded(msg.value);
     }
 
-    //In case user wants to refill the contract without frontend/directly
+    ///@notice In case user wants to refill the contract without frontend/directly
     receive() external payable {
         emit Funded(msg.value);
     }
