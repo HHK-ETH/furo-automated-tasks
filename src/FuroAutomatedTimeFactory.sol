@@ -55,7 +55,6 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
                 data,
                 (uint256, address, address, uint32, bool, bool, bytes)
             );
-        address furo = vesting ? address(furoVesting) : address(furoStream);
 
         furoAutomated = FuroAutomatedTime(
             address(implementation).clone(
@@ -64,7 +63,7 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
                     address(this),
                     address(ops),
                     ops.gelato(),
-                    furo,
+                    vesting ? address(furoVesting) : address(furoStream),
                     msg.sender,
                     token,
                     vesting,
