@@ -8,17 +8,6 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
     using ClonesWithImmutableArgs for address;
 
     /// -----------------------------------------------------------------------
-    /// Events
-    /// -----------------------------------------------------------------------
-
-    event CreateFuroAutomated(
-        BaseFuroAutomated indexed clone,
-        address furo,
-        address token,
-        uint256 id
-    );
-
-    /// -----------------------------------------------------------------------
     /// Immutable variables
     /// -----------------------------------------------------------------------
     FuroStream internal immutable furoStream;
@@ -52,7 +41,7 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
     function _createFuroAutomated(bytes calldata data)
         internal
         override
-        returns (BaseFuroAutomated furoAutomated)
+        returns (BaseFuroAutomated furoAutomated, bytes memory initData)
     {
         (
             uint256 id,
@@ -66,8 +55,8 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
                 data,
                 (uint256, address, address, uint32, bool, bool, bytes)
             );
-
         address furo = vesting ? address(furoVesting) : address(furoStream);
+
         furoAutomated = FuroAutomatedTime(
             address(implementation).clone(
                 abi.encodePacked(
@@ -94,10 +83,6 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
             furoStream.safeTransferFrom(msg.sender, address(furoAutomated), id);
         }
 
-        emit CreateFuroAutomated(furoAutomated, furo, token, id); //trigger creation event before update so a subgraph can index update event easily
-
-        furoAutomated.init(
-            abi.encode(withdrawTo, withdrawPeriod, toBentoBox, taskData)
-        );
+        initData = abi.encode(withdrawTo, withdrawPeriod, toBentoBox, taskData);
     }
 }

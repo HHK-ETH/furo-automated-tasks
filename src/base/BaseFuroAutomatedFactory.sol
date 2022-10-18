@@ -10,6 +10,12 @@ import {ClonesWithImmutableArgs} from "./../clonesWithImmutableArgs/ClonesWithIm
 
 abstract contract BaseFuroAutomatedFactory {
     /// -----------------------------------------------------------------------
+    /// Events
+    /// -----------------------------------------------------------------------
+
+    event CreateFuroAutomated(BaseFuroAutomated indexed clone, bytes data);
+
+    /// -----------------------------------------------------------------------
     /// Immutable variables
     /// -----------------------------------------------------------------------
 
@@ -44,16 +50,21 @@ abstract contract BaseFuroAutomatedFactory {
         payable
         returns (BaseFuroAutomated furoAutomated)
     {
-        furoAutomated = _createFuroAutomated(data);
+        bytes memory initData;
+        (furoAutomated, initData) = _createFuroAutomated(data);
+
+        furoAutomated.init(initData);
 
         if (msg.value > 0) {
             furoAutomated.fund{value: msg.value}();
         }
+
+        emit CreateFuroAutomated(furoAutomated, data);
     }
 
     ///@notice Contract creation logic
     function _createFuroAutomated(bytes calldata data)
         internal
         virtual
-        returns (BaseFuroAutomated furoAutomated);
+        returns (BaseFuroAutomated furoAutomated, bytes memory initData);
 }
