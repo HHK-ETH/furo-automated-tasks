@@ -12,6 +12,7 @@ import {FuroVestingRouter} from "./../furo/FuroVestingRouter.sol";
 import {FuroAutomatedTime, BaseFuroAutomated, ERC721TokenReceiver} from "./../FuroAutomatedTime.sol";
 import {FuroAutomatedTimeFactory} from "./../FuroAutomatedTimeFactory.sol";
 import {GelatoMock} from "./../mock/GelatoMock.sol";
+import {AutoUnwrap} from "./../mock/AutoUnwrap.sol";
 
 contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     ERC20Mock WETH;
@@ -133,6 +134,7 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         furoAutomatedTime = FuroAutomatedTime(
             payable(factory.createFuroAutomated(data))
         );
+        furoAutomatedTime.fund{value: 1 ether}();
     }
 
     ///@notice Helper function to easily create Furo Automated Time clone
@@ -152,6 +154,7 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         furoAutomatedTime = FuroAutomatedTime(
             payable(factory.createFuroAutomated(data))
         );
+        furoAutomatedTime.fund{value: 1 ether}();
     }
 
     function testCreateAutomatedTime_withStream() public {
@@ -266,7 +269,6 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
 
     function testExecTask() public {
         FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
-        furoAutomatedTime.fund{value: 1 ether}();
         uint256 balance = WETH.balanceOf(furoAutomatedTime.withdrawTo());
         vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
@@ -287,7 +289,6 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
 
     function testCannotExecTask_ifNotOps() public {
         FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
-        furoAutomatedTime.fund{value: 1 ether}();
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
         vm.expectRevert(BaseFuroAutomated.NotOps.selector);
@@ -296,11 +297,66 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
 
     function testCannotExecTask_ifToEarly() public {
         FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
-        furoAutomatedTime.fund{value: 1 ether}();
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
         vm.prank(address(ops));
         vm.expectRevert(FuroAutomatedTime.ToEarlyToWithdraw.selector);
         furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+    }
+
+    function testExecTask_toBentoBox() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        bytes memory data = abi.encode(
+            furoAutomatedTime.withdrawTo(),
+            furoAutomatedTime.withdrawPeriod(),
+            true,
+            furoAutomatedTime.taskData()
+        );
+        furoAutomatedTime.updateTask(data);
+        uint256 balance = bentobox.balanceOf(
+            IERC20(address(WETH)),
+            furoAutomatedTime.withdrawTo()
+        );
+        vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
+        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
+            .streamBalanceOf(furoAutomatedTime.id());
+        vm.prank(address(ops));
+        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+
+        assertEq(
+            bentobox.balanceOf(
+                IERC20(address(WETH)),
+                furoAutomatedTime.withdrawTo()
+            ),
+            balance + sharesToWithdraw
+        );
+    }
+
+    function testExecTask_execTaskDataOnWithdrawTo() public {
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        AutoUnwrap autoUnwrap = new AutoUnwrap(address(99), payable(WETH));
+        vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
+        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
+            .streamBalanceOf(furoAutomatedTime.id());
+        bytes memory data = abi.encode(
+            address(autoUnwrap),
+            furoAutomatedTime.withdrawPeriod(),
+            false,
+            abi.encode(
+                bentobox.toAmount(
+                    IERC20(address(WETH)),
+                    sharesToWithdraw,
+                    false
+                )
+            )
+        );
+        furoAutomatedTime.updateTask(data);
+        vm.prank(address(ops));
+        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+        assertEq(furoAutomatedTime.lastWithdraw(), block.timestamp);
+        assertEq(
+            bentobox.toAmount(IERC20(address(WETH)), sharesToWithdraw, false),
+            address(99).balance
+        );
     }
 }

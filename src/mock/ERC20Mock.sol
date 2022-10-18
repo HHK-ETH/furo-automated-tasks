@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity ^0.8.16;
 
-pragma solidity ^0.8.13;
-
-import "solmate/tokens/ERC20.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
 
 contract ERC20Mock is ERC20 {
     event Deposit(address indexed dst, uint256 wad);
