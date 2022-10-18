@@ -21,7 +21,6 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     error NotFactory();
     error NotOwner();
-    error NotOps();
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
@@ -79,13 +78,6 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         _;
     }
 
-    modifier onlyOps() {
-        if (msg.sender != ops()) {
-            revert NotOps();
-        }
-        _;
-    }
-
     /// -----------------------------------------------------------------------
     /// external functions
     /// -----------------------------------------------------------------------
@@ -136,7 +128,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     ///@notice Gelato keeper execute function
     ///@param execPayload Abi encoded data neeeded to execute
-    function executeTask(bytes calldata execPayload) external onlyOps {
+    function executeTask(bytes calldata execPayload) external {
         _executeTask(execPayload);
 
         //pay gelato ops

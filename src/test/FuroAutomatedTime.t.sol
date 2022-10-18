@@ -287,14 +287,6 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         );
     }
 
-    function testCannotExecTask_ifNotOps() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
-        (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
-            .streamBalanceOf(furoAutomatedTime.id());
-        vm.expectRevert(BaseFuroAutomated.NotOps.selector);
-        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
-    }
-
     function testCannotExecTask_ifToEarly() public {
         FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())

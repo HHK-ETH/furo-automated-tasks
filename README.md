@@ -15,5 +15,5 @@ Users can select the time between each withdraw, the recipient, if should be in 
 
 ##### Deployements: 
 Goerli:
--  Implementation: [0x1E7f9acF1d4E7f02965e74b1CCdcEB9cdA92421F](https://goerli.etherscan.io/address/0x3d80b2f148f22ec150a5da78e86f479dc1e34b9f)
--  Factory: [0xB46217aF1Eb975e616108af0bEe28D9FD22D6F2C](https://goerli.etherscan.io/address/0xB46217aF1Eb975e616108af0bEe28D9FD22D6F2C)
+-  Implementation: [0x6059AE4BAE2cB70e3733217145967C58f28727EA](https://goerli.etherscan.io/address/0x6059AE4BAE2cB70e3733217145967C58f28727EA)
+-  Factory: [0xC18bd9397d3af5dF1e916f64783CA9D90Dc8352D](https://goerli.etherscan.io/address/0xC18bd9397d3af5dF1e916f64783CA9D90Dc8352D)
