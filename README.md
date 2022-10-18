@@ -14,4 +14,6 @@ Ex: Withdraw from stream every 7 days and send to a chosen address like a centra
 Users can select the time between each withdraw, the recipient, if should be in bentobox and a calldata to be executed on the recipient on each withdraw (useful if the recipient is a contract, ex: swap or bridge the tokens received).
 
 ##### Deployements: 
-Goerli ==> [0x3D80B2f148F22Ec150A5dA78e86f479dc1E34b9F](https://goerli.etherscan.io/address/0x3d80b2f148f22ec150a5da78e86f479dc1e34b9f)
+Goerli:
+-  Implementation: [0x1E7f9acF1d4E7f02965e74b1CCdcEB9cdA92421F](https://goerli.etherscan.io/address/0x3d80b2f148f22ec150a5da78e86f479dc1e34b9f)
+-  Factory: [0xB46217aF1Eb975e616108af0bEe28D9FD22D6F2C](https://goerli.etherscan.io/address/0xB46217aF1Eb975e616108af0bEe28D9FD22D6F2C)
