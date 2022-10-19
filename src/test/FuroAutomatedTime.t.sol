@@ -25,6 +25,8 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     FuroAutomatedTimeFactory factory;
     GelatoMock ops;
 
+    receive() external payable {}
+
     ///@notice Deploy contracts needed for each tests
     function setUp() public {
         //Deploy contracts needed
@@ -118,36 +120,16 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     ///@notice Helper function to easily create Furo Automated Time clone
-    function _createBasicFuroAutomatedTimeStream()
+    function _createBasicFuroAutomatedTime(bool vesting)
         internal
         returns (FuroAutomatedTime furoAutomatedTime)
     {
         bytes memory data = abi.encode(
-            uint256(1000),
+            vesting ? uint256(1) : uint256(1000),
             address(WETH),
             address(this),
             uint32(3600),
-            false,
-            false,
-            bytes("")
-        );
-        furoAutomatedTime = FuroAutomatedTime(
-            payable(factory.createFuroAutomated(data))
-        );
-        furoAutomatedTime.fund{value: 1 ether}();
-    }
-
-    ///@notice Helper function to easily create Furo Automated Time clone
-    function _createBasicFuroAutomatedTimeVesting()
-        internal
-        returns (FuroAutomatedTime furoAutomatedTime)
-    {
-        bytes memory data = abi.encode(
-            uint256(1),
-            address(WETH),
-            address(this),
-            uint32(3600),
-            true,
+            vesting,
             false,
             bytes("")
         );
@@ -158,7 +140,12 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testCreateAutomatedTime_withStream() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //exec
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
+
+        //assert
         assertEq(furoAutomatedTime.id(), uint256(1000));
         assertEq(furoAutomatedTime.vesting(), false);
         assertEq(furoAutomatedTime.token(), address(WETH));
@@ -173,7 +160,12 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testCreateAutomatedTime_withVesting() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeVesting();
+        //exec
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            true
+        );
+
+        //assert
         assertEq(furoAutomatedTime.id(), uint256(1));
         assertEq(furoAutomatedTime.vesting(), true);
         assertEq(furoAutomatedTime.token(), address(WETH));
@@ -188,7 +180,10 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testUpdateAutomatedTime() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
         address withdrawTo = address(100);
         uint32 withdrawPeriod = 9999;
         bool toBentoBox = true;
@@ -199,7 +194,11 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
             toBentoBox,
             taskData
         );
+
+        //exec
         furoAutomatedTime.updateTask(data);
+
+        //assert
         assertEq(furoAutomatedTime.withdrawTo(), withdrawTo);
         assertEq(furoAutomatedTime.withdrawPeriod(), withdrawPeriod);
         assertEq(furoAutomatedTime.toBentoBox(), toBentoBox);
@@ -207,8 +206,10 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testCannotUpdateAutomatedTime_ifNotOwner() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
-        vm.prank(address(2222));
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
         address withdrawTo = address(100);
         uint32 withdrawPeriod = 9999;
         bool toBentoBox = true;
@@ -219,36 +220,71 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
             toBentoBox,
             taskData
         );
+        //setup vm
+        vm.prank(address(2222));
         vm.expectRevert(BaseFuroAutomated.NotOwner.selector);
+
+        //exec
         furoAutomatedTime.updateTask(data);
     }
 
     function testCancelAutomatedTime() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
+        uint256 balance = address(this).balance;
+        uint256 cloneBalance = address(furoAutomatedTime).balance;
+
+        //exec
         furoAutomatedTime.cancelTask(abi.encode(address(this)));
+
+        //assert
         assertEq(furoStream.ownerOf(furoAutomatedTime.id()), address(this));
+        assertEq(address(this).balance, balance + cloneBalance);
+        assertEq(address(furoAutomatedTime).balance, 0);
     }
 
     function testCannotCancelAutomatedTime_ifNotOwner() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
+        //setup vm
         vm.prank(address(2222));
         vm.expectRevert(BaseFuroAutomated.NotOwner.selector);
+
+        //exec
         furoAutomatedTime.cancelTask(abi.encode(address(this)));
     }
 
     function testCannotInit_ifNotFactory() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
+        //setup vm
         vm.expectRevert(BaseFuroAutomated.NotFactory.selector);
+
+        //exec
         furoAutomatedTime.init("");
     }
 
     function testCheckTask_canExec() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
+        //setup vm
         vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
-        (bool canExec, bytes memory execPayload) = furoAutomatedTime
-            .checkTask();
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
+
+        //exec
+        (bool canExec, bytes memory execPayload) = furoAutomatedTime
+            .checkTask();
+
+        //assert
         assertEq(canExec, true);
         assertEq(
             execPayload,
@@ -260,27 +296,37 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testCheckTask_canNotExec() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
+
+        //exec
         (bool canExec, bytes memory execPayload) = furoAutomatedTime
             .checkTask();
+
+        //assert
         assertEq(canExec, false);
         assertEq(execPayload, bytes(""));
     }
 
     function testExecTask() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
         uint256 balance = WETH.balanceOf(furoAutomatedTime.withdrawTo());
+        //setup vm
         vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
         (, bytes memory execPayload) = furoAutomatedTime.checkTask();
         vm.prank(address(ops));
-        (bool success, ) = address(furoAutomatedTime).call(
-            abi.encodeWithSelector(
-                BaseFuroAutomated.executeTask.selector,
-                abi.encode(sharesToWithdraw)
-            )
-        );
+
+        //exec
+        (bool success, ) = address(furoAutomatedTime).call(execPayload);
+
+        //assert
         assertEq(success, true);
         assertEq(furoAutomatedTime.lastWithdraw(), block.timestamp);
         assertEq(
@@ -295,20 +341,30 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testCannotExecTask_ifToEarly() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
+
+        //setup vm
         vm.prank(address(ops));
         vm.expectRevert(FuroAutomatedTime.ToEarlyToWithdraw.selector);
+
+        //exec
         furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
     }
 
     function testExecTask_toBentoBox() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
         bytes memory data = abi.encode(
             furoAutomatedTime.withdrawTo(),
             furoAutomatedTime.withdrawPeriod(),
-            true,
+            true, //set bento to true
             furoAutomatedTime.taskData()
         );
         furoAutomatedTime.updateTask(data);
@@ -316,12 +372,16 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
             IERC20(address(WETH)),
             furoAutomatedTime.withdrawTo()
         );
+        //setup vm
         vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
         vm.prank(address(ops));
+
+        //exec
         furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
 
+        //assert
         assertEq(
             bentobox.balanceOf(
                 IERC20(address(WETH)),
@@ -332,8 +392,12 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
     }
 
     function testExecTask_execTaskDataOnWithdrawTo() public {
-        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTimeStream();
+        //setup
+        FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
+            false
+        );
         AutoUnwrap autoUnwrap = new AutoUnwrap(address(99), payable(WETH));
+        //setup vm
         vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
@@ -351,7 +415,11 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         );
         furoAutomatedTime.updateTask(data);
         vm.prank(address(ops));
+
+        //exec
         furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+
+        //assert
         assertEq(furoAutomatedTime.lastWithdraw(), block.timestamp);
         assertEq(
             bentobox.toAmount(IERC20(address(WETH)), sharesToWithdraw, false),
