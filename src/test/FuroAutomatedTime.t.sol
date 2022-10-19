@@ -164,7 +164,7 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         assertEq(furoAutomatedTime.token(), address(WETH));
         assertEq(furoAutomatedTime.owner(), address(this));
         assertEq(furoAutomatedTime.furo(), address(furoStream));
-        assertEq(furoAutomatedTime.ops(), address(ops));
+        assertEq(address(furoAutomatedTime.ops()), address(ops));
         assertEq(furoAutomatedTime.withdrawTo(), address(this));
         assertEq(furoAutomatedTime.withdrawPeriod(), uint32(3600));
         assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
@@ -179,7 +179,7 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         assertEq(furoAutomatedTime.token(), address(WETH));
         assertEq(furoAutomatedTime.owner(), address(this));
         assertEq(furoAutomatedTime.furo(), address(furoVesting));
-        assertEq(furoAutomatedTime.ops(), address(ops));
+        assertEq(address(furoAutomatedTime.ops()), address(ops));
         assertEq(furoAutomatedTime.withdrawTo(), address(this));
         assertEq(furoAutomatedTime.withdrawPeriod(), uint32(3600));
         assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
@@ -254,7 +254,7 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
             execPayload,
             abi.encodeWithSelector(
                 BaseFuroAutomated.executeTask.selector,
-                sharesToWithdraw
+                abi.encode(sharesToWithdraw)
             )
         );
     }
@@ -273,8 +273,15 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         vm.warp(block.timestamp + furoAutomatedTime.withdrawPeriod() + 1);
         (, uint256 sharesToWithdraw) = FuroStream(furoAutomatedTime.furo())
             .streamBalanceOf(furoAutomatedTime.id());
+        (, bytes memory execPayload) = furoAutomatedTime.checkTask();
         vm.prank(address(ops));
-        furoAutomatedTime.executeTask(abi.encode(sharesToWithdraw));
+        (bool success, ) = address(furoAutomatedTime).call(
+            abi.encodeWithSelector(
+                BaseFuroAutomated.executeTask.selector,
+                abi.encode(sharesToWithdraw)
+            )
+        );
+        assertEq(success, true);
         assertEq(furoAutomatedTime.lastWithdraw(), block.timestamp);
         assertEq(
             WETH.balanceOf(furoAutomatedTime.withdrawTo()),

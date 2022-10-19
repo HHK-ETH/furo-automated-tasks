@@ -107,7 +107,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
                 true,
                 abi.encodeWithSelector(
                     this.executeTask.selector,
-                    sharesToWithdraw
+                    abi.encode(sharesToWithdraw)
                 )
             );
         }

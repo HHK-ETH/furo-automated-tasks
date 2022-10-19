@@ -34,8 +34,8 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         return _getArgAddress(20);
     }
 
-    function ops() public pure returns (address) {
-        return _getArgAddress(40);
+    function ops() public pure returns (IOps) {
+        return IOps(_getArgAddress(40));
     }
 
     function gelato() public pure returns (address) {
@@ -87,7 +87,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     function init(bytes calldata data) external onlyFactory {
         _init(data);
 
-        taskId = IOps(ops()).createTaskNoPrepayment(
+        taskId = ops().createTaskNoPrepayment(
             address(this),
             this.executeTask.selector,
             address(this),
@@ -113,7 +113,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     function cancelTask(bytes calldata data) external onlyOwner {
         _cancelTask(data);
 
-        IOps(ops()).cancelTask(taskId);
+        ops().cancelTask(taskId);
     }
 
     ///@notice cancelTask() implementation logic
@@ -132,7 +132,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         _executeTask(execPayload);
 
         //pay gelato ops
-        (uint256 fee, address feeToken) = IOps(ops()).getFeeDetails();
+        (uint256 fee, address feeToken) = ops().getFeeDetails();
         _transfer(fee, feeToken);
     }
 
