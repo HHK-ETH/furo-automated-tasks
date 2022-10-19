@@ -69,7 +69,9 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     }
 
     modifier onlyOwner() {
-        _checkOwner();
+        if (msg.sender != owner()) {
+            revert NotOwner();
+        }
         _;
     }
 
@@ -190,13 +192,6 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
             require(success, "_transfer: ETH transfer failed");
         } else {
             SafeERC20.safeTransfer(IERC20(_paymentToken), gelato(), _amount);
-        }
-    }
-
-    ///@notice Logic of onlyOwner modifier, reduces codesize by being put in a local function as it's used multiple times
-    function _checkOwner() internal view {
-        if (msg.sender != owner()) {
-            revert NotOwner();
         }
     }
 }
