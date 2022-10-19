@@ -60,7 +60,6 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
             address(implementation).clone(
                 abi.encodePacked(
                     address(bentoBox),
-                    address(this),
                     address(ops),
                     ops.gelato(),
                     vesting ? address(furoVesting) : address(furoStream),

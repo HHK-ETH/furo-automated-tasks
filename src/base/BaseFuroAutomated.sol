@@ -14,12 +14,14 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// -----------------------------------------------------------------------
 
     event Funded(uint256 amount);
+    event Withdraw(uint256 amount);
+    event TaskId(bytes32 id);
 
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
 
-    error NotFactory();
+    error AlreadyInit();
     error NotOwner();
 
     /// -----------------------------------------------------------------------
@@ -30,28 +32,24 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         return IBentoBoxMinimal(_getArgAddress(0));
     }
 
-    function factory() internal pure returns (address) {
-        return _getArgAddress(20);
-    }
-
     function ops() public pure returns (IOps) {
-        return IOps(_getArgAddress(40));
+        return IOps(_getArgAddress(20));
     }
 
     function gelato() public pure returns (address) {
-        return _getArgAddress(60);
+        return _getArgAddress(40);
     }
 
     function furo() public pure returns (address) {
-        return _getArgAddress(80);
+        return _getArgAddress(60);
     }
 
     function owner() public pure returns (address) {
-        return _getArgAddress(100);
+        return _getArgAddress(80);
     }
 
     function token() public pure returns (address) {
-        return _getArgAddress(120);
+        return _getArgAddress(100);
     }
 
     /// -----------------------------------------------------------------------
@@ -64,9 +62,9 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// modifiers
     /// -----------------------------------------------------------------------
 
-    modifier onlyFactory() {
-        if (msg.sender != factory()) {
-            revert NotFactory();
+    modifier onlyInitOnce() {
+        if (taskId != bytes32(0)) {
+            revert AlreadyInit();
         }
         _;
     }
@@ -84,7 +82,8 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     ///@notice Called on contract creation by factory to init variables
     ///@param data Abi encoded data for initiating the newly created clone
-    function init(bytes calldata data) external onlyFactory {
+    function init(bytes calldata data) external onlyInitOnce {
+        emit TaskId(taskId);
         _init(data);
 
         taskId = ops().createTaskNoPrepayment(
@@ -108,12 +107,10 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     ///@notice updateTask() implementation logic
     function _updateTask(bytes calldata data) internal virtual;
 
-    ///@notice Cancel the gelato task and send back Furo NFT and Native tokens
+    ///@notice Send back Furo NFT and Native tokens
     ///@param data Abi encoded data neeeded to cancel the task
     function cancelTask(bytes calldata data) external onlyOwner {
         _cancelTask(data);
-
-        ops().cancelTask(taskId);
     }
 
     ///@notice cancelTask() implementation logic
@@ -143,6 +140,22 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     ///@notice Fund the contract, should be used over a transfer
     function fund() external payable {
         emit Funded(msg.value);
+    }
+
+    ///@notice Withdraw funds from the contract
+    ///@param to Address to withdraw to
+    function withdraw(address to) external onlyOwner returns (bool success) {
+        success = _withdraw(to);
+    }
+
+    ///@notice Withdraw funds from the contract
+    ///@param to Address to withdraw to
+    function _withdraw(address to) internal returns (bool success) {
+        uint256 balance = address(this).balance;
+        (success, ) = to.call{value: balance}("");
+        if (success) {
+            emit Withdraw(balance);
+        }
     }
 
     ///@notice In case user wants to refill the contract without frontend/directly
