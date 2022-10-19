@@ -15,7 +15,6 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     event Funded(uint256 amount);
     event Withdraw(uint256 amount);
-    event TaskId(bytes32 id);
 
     /// -----------------------------------------------------------------------
     /// Errors
@@ -83,7 +82,6 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     ///@notice Called on contract creation by factory to init variables
     ///@param data Abi encoded data for initiating the newly created clone
     function init(bytes calldata data) external onlyInitOnce {
-        emit TaskId(taskId);
         _init(data);
 
         taskId = ops().createTaskNoPrepayment(
