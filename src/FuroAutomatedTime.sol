@@ -30,11 +30,11 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// -----------------------------------------------------------------------
 
     function vesting() public pure returns (bool) {
-        return _getArgBool(140);
+        return _getArgBool(120);
     }
 
     function id() public pure returns (uint256) {
-        return _getArgUint256(141);
+        return _getArgUint256(121);
     }
 
     /// -----------------------------------------------------------------------
@@ -81,7 +81,8 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         } else {
             FuroStream(furo()).safeTransferFrom(address(this), to, id());
         }
-        to.call{value: address(this).balance}("");
+        _withdraw(to);
+
         emit TaskCancel(to);
     }
 

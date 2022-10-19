@@ -258,13 +258,13 @@ contract TestFuroAutomatedTime is Test, ERC721TokenReceiver {
         furoAutomatedTime.cancelTask(abi.encode(address(this)));
     }
 
-    function testCannotInit_ifNotFactory() public {
+    function testCannotInit_ifAlreadyInit() public {
         //setup
         FuroAutomatedTime furoAutomatedTime = _createBasicFuroAutomatedTime(
             false
         );
         //setup vm
-        vm.expectRevert(BaseFuroAutomated.NotFactory.selector);
+        vm.expectRevert(BaseFuroAutomated.AlreadyInit.selector);
 
         //exec
         furoAutomatedTime.init("");

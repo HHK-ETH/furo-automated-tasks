@@ -31,8 +31,16 @@ contract GelatoMock is IOps {
         bytes4 _execSelector,
         address _resolverAddress,
         bytes calldata _resolverData
-    ) external returns (bytes32 task) {
-        return "";
+    ) external pure returns (bytes32 task) {
+        task = keccak256(
+            abi.encode(
+                _execAddress,
+                _execSelector,
+                _resolverAddress,
+                _resolverData
+            )
+        );
+        return task;
     }
 
     function createTaskNoPrepayment(
@@ -41,11 +49,15 @@ contract GelatoMock is IOps {
         address _resolverAddress,
         bytes calldata _resolverData,
         address _feeToken
-    ) external returns (bytes32 task) {
-        return "";
-    }
-
-    function cancelTask(bytes32 _taskId) external {
-        return;
+    ) external pure returns (bytes32 task) {
+        task = keccak256(
+            abi.encode(
+                _execAddress,
+                _execSelector,
+                _resolverAddress,
+                _resolverData
+            )
+        );
+        return task;
     }
 }

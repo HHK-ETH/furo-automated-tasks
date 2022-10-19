@@ -20,6 +20,4 @@ interface IOps {
         bytes calldata _resolverData,
         address _feeToken
     ) external returns (bytes32 task);
-
-    function cancelTask(bytes32 _taskId) external;
 }
