@@ -13,7 +13,11 @@ abstract contract BaseFuroAutomatedFactory {
     /// Events
     /// -----------------------------------------------------------------------
 
-    event CreateFuroAutomated(BaseFuroAutomated indexed clone, bytes data);
+    event CreateFuroAutomated(
+        BaseFuroAutomated indexed clone,
+        uint256 amount,
+        bytes data
+    );
 
     /// -----------------------------------------------------------------------
     /// Immutable variables
@@ -61,7 +65,7 @@ abstract contract BaseFuroAutomatedFactory {
             furoAutomated.fund{value: msg.value}();
         }
 
-        emit CreateFuroAutomated(furoAutomated, data);
+        emit CreateFuroAutomated(furoAutomated, msg.value, data);
     }
 
     ///@notice Contract creation logic
