@@ -14,10 +14,10 @@ Ex: Withdraw from stream every 7 days and send to a chosen address like a centra
 Users can select the time between each withdraw, the recipient, if should be in bentobox and a calldata to be executed on the recipient on each withdraw (useful if the recipient is a contract, ex: swap or bridge the tokens received).
 
 ##### Deployements: 
-Goerli:
--  Implementation: [0x8dAE118A00138cD081Ed8e4cc4a9e51520D452F8](https://goerli.etherscan.io/address/0x8dAE118A00138cD081Ed8e4cc4a9e51520D452F8)
--  Factory: [0xb5A0699004Bd885C1adF1540A21DC31Addb674DC](https://goerli.etherscan.io/address/0xb5A0699004Bd885C1adF1540A21DC31Addb674DC)
+Goerli (latest):
+-  Implementation: [0xE8763bD2Aeb60B12499afd5672F8263AcE03Bd5B](https://goerli.etherscan.io/address/0xE8763bD2Aeb60B12499afd5672F8263AcE03Bd5B)
+-  Factory: [0x2FEea3f52abC10A6c209b7bf051C245649dB353b](https://goerli.etherscan.io/address/0x2FEea3f52abC10A6c209b7bf051C245649dB353b)
   
-Polygon:
+Polygon (old):
 -  Implementation: [0xfd15bcE6f24070CbE06E2cBC2C61f24E878018ab](https://polygonscan.com/address/0xfd15bcE6f24070CbE06E2cBC2C61f24E878018ab)
 -  Factory: [0x959704324b257b4603B0931550212e1522E70c4A](https://polygonscan.com/address/0x959704324b257b4603B0931550212e1522E70c4A)
