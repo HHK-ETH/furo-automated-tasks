@@ -15,6 +15,9 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     event Funded(uint256 amount);
     event Withdraw(uint256 amount);
+    event TaskUpdate(bytes data);
+    event TaskCancel(bytes data);
+    event TaskExecute(uint256 fee);
 
     /// -----------------------------------------------------------------------
     /// Errors
@@ -100,6 +103,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     ///@param data Abi encoded data neeeded to update the contract
     function updateTask(bytes calldata data) external onlyOwner {
         _updateTask(data);
+        emit TaskUpdate(data);
     }
 
     ///@notice updateTask() implementation logic
@@ -109,6 +113,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     ///@param data Abi encoded data neeeded to cancel the task
     function cancelTask(bytes calldata data) external onlyOwner {
         _cancelTask(data);
+        emit TaskCancel(data);
     }
 
     ///@notice cancelTask() implementation logic
@@ -127,8 +132,12 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
         _executeTask(execPayload);
 
         //pay gelato ops
-        (uint256 fee, address feeToken) = ops().getFeeDetails();
-        _transfer(fee, feeToken);
+        (uint256 fee, ) = ops().getFeeDetails();
+        (bool success, ) = gelato().call{value: fee}("");
+        if (!success) {
+            revert();
+        }
+        emit TaskExecute(fee);
     }
 
     ///@notice executeTask() logic implementation
@@ -182,16 +191,6 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
             bentoBox().transfer(tokenAddress, from, to, shares);
         } else {
             bentoBox().withdraw(tokenAddress, from, to, 0, shares);
-        }
-    }
-
-    ///@notice Gelato compatible transfer function to pay fees
-    function _transfer(uint256 _amount, address _paymentToken) internal {
-        if (_paymentToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
-            (bool success, ) = gelato().call{value: _amount}("");
-            require(success, "_transfer: ETH transfer failed");
-        } else {
-            SafeERC20.safeTransfer(IERC20(_paymentToken), gelato(), _amount);
         }
     }
 }

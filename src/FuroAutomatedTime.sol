@@ -13,19 +13,6 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     error ToEarlyToWithdraw();
 
     /// -----------------------------------------------------------------------
-    /// Events
-    /// -----------------------------------------------------------------------
-
-    event TaskUpdate(
-        address withdrawTo,
-        uint32 withdrawPeriod,
-        bool toBentoBox,
-        bytes taskData
-    );
-    event TaskCancel(address to);
-    event TaskExecute(uint256 amount);
-
-    /// -----------------------------------------------------------------------
     /// Immutable variables
     /// -----------------------------------------------------------------------
 
@@ -69,7 +56,6 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         withdrawPeriod = _withdrawPeriod;
         toBentoBox = _toBentoBox;
         taskData = _taskData;
-        emit TaskUpdate(_withdrawTo, _withdrawPeriod, _toBentoBox, _taskData);
     }
 
     ///@notice Cancel Gelato task, send back Furo NFT and send back native token
@@ -82,8 +68,6 @@ contract FuroAutomatedTime is BaseFuroAutomated {
             FuroStream(furo()).safeTransferFrom(address(this), to, id());
         }
         _withdraw(to);
-
-        emit TaskCancel(to);
     }
 
     /// -----------------------------------------------------------------------
@@ -149,6 +133,5 @@ contract FuroAutomatedTime is BaseFuroAutomated {
         }
 
         lastWithdraw = uint128(block.timestamp);
-        emit TaskExecute(sharesToWithdraw);
     }
 }
