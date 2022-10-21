@@ -9,8 +9,8 @@ import {FuroStream, IFuroStream} from "./../furo/FuroStream.sol";
 import {FuroStreamRouter} from "./../furo/FuroStreamRouter.sol";
 import {FuroVesting, IFuroVesting} from "./../furo/FuroVesting.sol";
 import {FuroVestingRouter} from "./../furo/FuroVestingRouter.sol";
-import {FuroAutomatedTime, BaseFuroAutomated, ERC721TokenReceiver} from "./../FuroAutomatedTime.sol";
-import {FuroAutomatedTimeFactory} from "./../FuroAutomatedTimeFactory.sol";
+import {FuroAutomatedTime, BaseFuroAutomated, ERC721TokenReceiver} from "./../implementations/FuroAutomatedTime.sol";
+import {FuroAutomatedTimeFactory} from "./../implementations/FuroAutomatedTimeFactory.sol";
 import {GelatoMock} from "./../mock/GelatoMock.sol";
 import {AutoUnwrap} from "./../mock/AutoUnwrap.sol";
 
