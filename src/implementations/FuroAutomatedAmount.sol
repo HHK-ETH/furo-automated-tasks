@@ -91,10 +91,7 @@ contract FuroAutomatedAmount is BaseFuroAutomated {
         if (amount > minAmount) {
             return (
                 true,
-                abi.encodeWithSelector(
-                    this.executeTask.selector,
-                    abi.encode(sharesToWithdraw, amount)
-                )
+                abi.encodeWithSelector(this.executeTask.selector, "")
             );
         }
     }
@@ -102,20 +99,17 @@ contract FuroAutomatedAmount is BaseFuroAutomated {
     ///@notice Function called by Gelato keepers if amount to claim is enough
     ///@param execPayload SharesToWitdraw and amount to withdraw
     function _executeTask(bytes calldata execPayload) internal override {
-        (uint256 sharesToWithdraw, uint256 amountToWithdraw) = abi.decode(
-            execPayload,
-            (uint256, uint256)
-        );
-
-        //check if not too early
-        if (amountToWithdraw > minAmount) {
-            revert NotEnoughToWithdraw();
-        }
-
+        uint256 sharesToWithdraw;
+        uint256 amount;
         if (vesting()) {
             FuroVesting(furo()).withdraw(id(), "", true);
             //Need to be computed again as it can increase between check and execution which could result in a very small amount of token burn
             sharesToWithdraw = bentoBox().balanceOf(token(), address(this)); //use less gas than vestBalance()
+            amount = bentoBox().toAmount(token(), sharesToWithdraw, false);
+            //check if not too early
+            if (amount < minAmount) {
+                revert NotEnoughToWithdraw();
+            }
             _transferToken(
                 token(),
                 address(this),
@@ -127,6 +121,12 @@ contract FuroAutomatedAmount is BaseFuroAutomated {
                 ITasker(withdrawTo).onTaskReceived(taskData);
             }
         } else {
+            (, sharesToWithdraw) = FuroStream(furo()).streamBalanceOf(id());
+            amount = bentoBox().toAmount(token(), sharesToWithdraw, false);
+            //check if not too early
+            if (amount < minAmount) {
+                revert NotEnoughToWithdraw();
+            }
             FuroStream(furo()).withdrawFromStream(
                 id(),
                 sharesToWithdraw,
