@@ -2,4 +2,4 @@
 fuzz-runs = 10_000
 optimizer = true
 optimizer_runs = 500
-gas_reports = ["FuroAutomatedTime", "FuroAutomatedTimeFactory", "FuroAutomatedAmount", "FuroAutomatedAmountFactory"]
+gas_reports = ["FuroAutomatedTime", "FuroAutomatedTimeFactory", "FuroAutomatedTimeNoClone", "FuroAutomatedTimeFactoryNoClone", "FuroAutomatedAmount", "FuroAutomatedAmountFactory"]

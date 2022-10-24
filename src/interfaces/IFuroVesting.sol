@@ -56,7 +56,7 @@ interface IFuroVesting {
 
     struct Vest {
         address owner;
-        IERC20 token;
+        address token;
         uint32 start;
         uint32 cliffDuration;
         uint32 stepDuration;
@@ -82,7 +82,7 @@ interface IFuroVesting {
 
     event Withdraw(
         uint256 indexed vestId,
-        IERC20 indexed token,
+        address indexed token,
         uint256 indexed amount,
         bool toBentoBox
     );
@@ -91,7 +91,7 @@ interface IFuroVesting {
         uint256 indexed vestId,
         uint256 indexed ownerAmount,
         uint256 indexed recipientAmount,
-        IERC20 token,
+        address token,
         bool toBentoBox
     );
 
