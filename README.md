@@ -22,7 +22,7 @@ Polygon:
 -  Implementation: [](https://polygonscan.com/address/)
 -  Factory: [](https://polygonscan.com/address/)  
 
-### 1 - FuroAutomatedTime
+### 1 - FuroAutomatedAmount
 
 This contract allows a Furo user to execute automatic withdrawal based on amount available to withdraw.
 
