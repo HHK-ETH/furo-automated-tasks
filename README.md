@@ -15,8 +15,8 @@ Users can select the time between each withdraw, the recipient, if should be in 
 
 ##### Deployements: 
 Goerli:
--  Implementation: [0xf385923a02f30669c62914DA5B547E5eE509385A](https://goerli.etherscan.io/address/0xf385923a02f30669c62914DA5B547E5eE509385A)
--  Factory: [0xfDb37D0B81Dd83c2a842E498913Ae968E3629360](https://goerli.etherscan.io/address/0xfDb37D0B81Dd83c2a842E498913Ae968E3629360)
+-  Implementation: [0x7BBDf0881D053bAeC144Cf79c3eB3ca9dCe86d17](https://goerli.etherscan.io/address/0x7BBDf0881D053bAeC144Cf79c3eB3ca9dCe86d17)
+-  Factory: [0xEC18AdD9FBBA16E9eaC2f7577928537E7aAc7DfD](https://goerli.etherscan.io/address/0xEC18AdD9FBBA16E9eaC2f7577928537E7aAc7DfD)
   
 Polygon:
 -  Implementation: [](https://polygonscan.com/address/)
@@ -32,8 +32,8 @@ Users can select the amount to execute the withdraw, the recipient, if should be
 
 ##### Deployements: 
 Goerli:
--  Implementation: [0x0a2bA55A98e1C7d3DA853D1f00DD1Be27c27A074](https://goerli.etherscan.io/address/0x0a2bA55A98e1C7d3DA853D1f00DD1Be27c27A074)
--  Factory: [0xF51c779f635B5412e2A129a7fdD76409acEB3b18](https://goerli.etherscan.io/address/0xF51c779f635B5412e2A129a7fdD76409acEB3b18)
+-  Implementation: [0x1506788CC107Ff347CDb33956AC601c2303c1E7D](https://goerli.etherscan.io/address/0x1506788CC107Ff347CDb33956AC601c2303c1E7D)
+-  Factory: [0x7ABC6f251ce41fc13F775E32D159FFF96A544E8A](https://goerli.etherscan.io/address/0x7ABC6f251ce41fc13F775E32D159FFF96A544E8A)
   
 Polygon:
 -  Implementation: [](https://polygonscan.com/address/)
