@@ -15,7 +15,7 @@ abstract contract BaseFuroAutomatedFactory {
 
     event CreateFuroAutomated(
         BaseFuroAutomated indexed clone,
-        uint256 amount,
+        bytes32 taskId,
         bytes data
     );
 
@@ -59,13 +59,13 @@ abstract contract BaseFuroAutomatedFactory {
         bytes memory initData;
         (furoAutomated, initData) = _createFuroAutomated(data);
 
-        furoAutomated.init(initData);
+        bytes32 taskId = furoAutomated.init(initData);
 
         if (msg.value > 0) {
             furoAutomated.fund{value: msg.value}();
         }
 
-        emit CreateFuroAutomated(furoAutomated, msg.value, data);
+        emit CreateFuroAutomated(furoAutomated, taskId, data);
     }
 
     ///@notice Contract creation logic

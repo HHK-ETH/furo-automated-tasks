@@ -84,7 +84,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     ///@notice Called on contract creation by factory to init variables
     ///@param data Abi encoded data for initiating the newly created clone
-    function init(bytes calldata data) external onlyInitOnce {
+    function init(bytes calldata data) external onlyInitOnce returns (bytes32) {
         _init(data);
 
         taskId = ops().createTaskNoPrepayment(
@@ -94,6 +94,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
             abi.encodeWithSelector(this.checkTask.selector),
             0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE //native token
         );
+        return taskId;
     }
 
     ///@notice init() implementation logic
