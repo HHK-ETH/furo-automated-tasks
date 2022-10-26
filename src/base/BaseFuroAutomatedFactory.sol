@@ -61,11 +61,11 @@ abstract contract BaseFuroAutomatedFactory {
 
         bytes32 taskId = furoAutomated.init(initData);
 
+        emit CreateFuroAutomated(furoAutomated, taskId, data); //emit creation before funding to allow better indexation
+
         if (msg.value > 0) {
             furoAutomated.fund{value: msg.value}();
         }
-
-        emit CreateFuroAutomated(furoAutomated, taskId, data);
     }
 
     ///@notice Contract creation logic
