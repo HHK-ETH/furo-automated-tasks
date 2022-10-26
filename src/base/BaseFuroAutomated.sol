@@ -13,7 +13,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
     /// Events
     /// -----------------------------------------------------------------------
 
-    event Funded(uint256 amount);
+    event Fund(uint256 amount);
     event Withdraw(uint256 amount);
     event TaskUpdate(bytes data);
     event TaskCancel(bytes data);
@@ -146,7 +146,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     ///@notice Fund the contract, should be used over a transfer
     function fund() external payable {
-        emit Funded(msg.value);
+        emit Fund(msg.value);
     }
 
     ///@notice Withdraw funds from the contract
@@ -167,7 +167,7 @@ abstract contract BaseFuroAutomated is Clone, ERC721TokenReceiver {
 
     ///@notice In case user wants to refill the contract without frontend/directly
     receive() external payable {
-        emit Funded(msg.value);
+        emit Fund(msg.value);
     }
 
     /// -----------------------------------------------------------------------
