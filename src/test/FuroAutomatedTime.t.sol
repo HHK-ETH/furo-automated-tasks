@@ -35,7 +35,7 @@ contract TestFuroAutomatedTime is FuroAutomatedSetUp {
             vesting ? uint256(1) : uint256(1000),
             address(WETH),
             address(this),
-            uint32(3600),
+            uint64(3600),
             vesting,
             false,
             bytes("")
@@ -60,7 +60,7 @@ contract TestFuroAutomatedTime is FuroAutomatedSetUp {
         assertEq(furoAutomatedTime.furo(), address(furoStream));
         assertEq(address(furoAutomatedTime.ops()), address(ops));
         assertEq(furoAutomatedTime.withdrawTo(), address(this));
-        assertEq(furoAutomatedTime.withdrawPeriod(), uint32(3600));
+        assertEq(furoAutomatedTime.withdrawPeriod(), uint64(3600));
         assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
         assertEq(furoAutomatedTime.toBentoBox(), false);
         assertEq(furoAutomatedTime.taskData(), bytes(""));
@@ -80,7 +80,7 @@ contract TestFuroAutomatedTime is FuroAutomatedSetUp {
         assertEq(furoAutomatedTime.furo(), address(furoVesting));
         assertEq(address(furoAutomatedTime.ops()), address(ops));
         assertEq(furoAutomatedTime.withdrawTo(), address(this));
-        assertEq(furoAutomatedTime.withdrawPeriod(), uint32(3600));
+        assertEq(furoAutomatedTime.withdrawPeriod(), uint64(3600));
         assertEq(furoAutomatedTime.lastWithdraw(), uint128(block.timestamp));
         assertEq(furoAutomatedTime.toBentoBox(), false);
         assertEq(furoAutomatedTime.taskData(), bytes(""));
@@ -92,7 +92,7 @@ contract TestFuroAutomatedTime is FuroAutomatedSetUp {
             false
         );
         address withdrawTo = address(100);
-        uint32 withdrawPeriod = 9999;
+        uint64 withdrawPeriod = 9999;
         bool toBentoBox = true;
         bytes memory taskData = "";
         bytes memory data = abi.encode(
@@ -118,7 +118,7 @@ contract TestFuroAutomatedTime is FuroAutomatedSetUp {
             false
         );
         address withdrawTo = address(100);
-        uint32 withdrawPeriod = 9999;
+        uint64 withdrawPeriod = 9999;
         bool toBentoBox = true;
         bytes memory taskData = "";
         bytes memory data = abi.encode(

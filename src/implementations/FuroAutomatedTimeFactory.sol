@@ -47,13 +47,13 @@ contract FuroAutomatedTimeFactory is BaseFuroAutomatedFactory {
             uint256 id,
             address token,
             address withdrawTo,
-            uint32 withdrawPeriod,
+            uint64 withdrawPeriod,
             bool vesting,
             bool toBentoBox,
             bytes memory taskData
         ) = abi.decode(
                 data,
-                (uint256, address, address, uint32, bool, bool, bytes)
+                (uint256, address, address, uint64, bool, bool, bytes)
             );
 
         furoAutomated = FuroAutomatedTime(

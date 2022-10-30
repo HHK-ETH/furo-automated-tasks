@@ -29,7 +29,7 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     /// -----------------------------------------------------------------------
 
     address public withdrawTo;
-    uint32 public withdrawPeriod;
+    uint64 public withdrawPeriod;
     uint128 public lastWithdraw;
     bool public toBentoBox;
     bytes public taskData;
@@ -48,10 +48,10 @@ contract FuroAutomatedTime is BaseFuroAutomated {
     function _updateTask(bytes calldata data) internal override {
         (
             address _withdrawTo,
-            uint32 _withdrawPeriod,
+            uint64 _withdrawPeriod,
             bool _toBentoBox,
             bytes memory _taskData
-        ) = abi.decode(data, (address, uint32, bool, bytes));
+        ) = abi.decode(data, (address, uint64, bool, bytes));
         withdrawTo = _withdrawTo;
         withdrawPeriod = _withdrawPeriod;
         toBentoBox = _toBentoBox;
